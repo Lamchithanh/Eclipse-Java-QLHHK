@@ -78,10 +78,12 @@ public class KhachHang {
         this.cmnd = cmnd;
     }
 
+    @SuppressWarnings("exports")
     public Date getNgaySinh() {
         return ngaySinh;
     }
 
+    @SuppressWarnings("exports")
     public void setNgaySinh(Date ngaySinh) {
         this.ngaySinh = ngaySinh;
     }

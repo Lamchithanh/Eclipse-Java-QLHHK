@@ -13,6 +13,7 @@ import java.util.*;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 
+@SuppressWarnings("unused")
 class SimpleDocumentListener implements DocumentListener {
     public void update() {
         // To be overridden

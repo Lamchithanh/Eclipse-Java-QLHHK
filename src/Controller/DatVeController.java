@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("unused")
 public class DatVeController {
     private static final Logger LOGGER = Logger.getLogger(DatVeController.class.getName());
     
@@ -284,6 +285,7 @@ public class DatVeController {
         }
     }
 
+    @SuppressWarnings("exports")
     public ChuyenBayService getChuyenBayService() {
         return chuyenBayService;
     }

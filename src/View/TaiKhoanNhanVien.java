@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+@SuppressWarnings("unused")
 public class TaiKhoanNhanVien extends JPanel {
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -16,6 +17,7 @@ public class TaiKhoanNhanVien extends JPanel {
     private UserAccountService userAccountService;
     private JFrame registerFrame;
 
+    @SuppressWarnings("exports")
     public TaiKhoanNhanVien(UserAccountService userAccountService, JFrame registerFrame) {
         this.userAccountService = userAccountService;
         this.registerFrame = registerFrame;

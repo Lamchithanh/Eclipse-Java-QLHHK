@@ -9,6 +9,7 @@ public class MYSQLDB {
     private static final String DB_USER = "root"; 
     private static final String DB_PASSWORD = "123"; 
 
+    @SuppressWarnings("exports")
     public static Connection getConnection() {
         try {
             Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -27,6 +28,7 @@ public class MYSQLDB {
         }
     }
 
+    @SuppressWarnings("exports")
     public static void closeConnection(Connection connection) {
         try {
             if (connection != null) {

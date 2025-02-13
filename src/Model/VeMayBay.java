@@ -20,6 +20,7 @@ public class VeMayBay {
     private String quocTich;
 
     // Constructor đầy đủ với thông tin vé và khách hàng
+    @SuppressWarnings("exports")
     public VeMayBay(String maVe, String maChuyenBay, String maKhachHang, 
                     Date ngayDat, String tenKhachHang, String cmnd, 
                     double giaVe, String trangThai,
@@ -41,6 +42,7 @@ public class VeMayBay {
     }
 
     // Constructor với thông tin cơ bản
+    @SuppressWarnings("exports")
     public VeMayBay(String maVe, String maChuyenBay, String maKhachHang, 
                     Date ngayDat, String tenKhachHang, String cmnd) {
         this(maVe, maChuyenBay, maKhachHang, ngayDat, tenKhachHang, cmnd, 
@@ -48,6 +50,7 @@ public class VeMayBay {
     }
 
     // Constructor với thông tin vé đầy đủ
+    @SuppressWarnings("exports")
     public VeMayBay(String maVe, String maChuyenBay, String maKhachHang, 
                     Date ngayDat, String tenKhachHang, String cmnd,
                     double giaVe, String trangThai) {
@@ -55,9 +58,9 @@ public class VeMayBay {
              giaVe, trangThai, null, null, null, null, null);
     }
 
-    public VeMayBay() {
-        //TODO Auto-generated constructor stub
-    }
+    // public VeMayBay() {
+    //     //TODO Auto-generated constructor stub
+    // }
 
     // Getter và setter cho các trường thông tin vé
     public String getMaVe() { return maVe; }
@@ -69,7 +72,9 @@ public class VeMayBay {
     public String getMaKhachHang() { return maKhachHang; }
     public void setMaKhachHang(String maKhachHang) { this.maKhachHang = maKhachHang; }
 
+    @SuppressWarnings("exports")
     public Date getNgayDat() { return ngayDat; }
+    @SuppressWarnings("exports")
     public void setNgayDat(Date ngayDat) { this.ngayDat = ngayDat; }
 
     public String getTenKhachHang() { return tenKhachHang; }
@@ -94,7 +99,9 @@ public class VeMayBay {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
+    @SuppressWarnings("exports")
     public Date getNgaySinh() { return ngaySinh; }
+    @SuppressWarnings("exports")
     public void setNgaySinh(Date ngaySinh) { this.ngaySinh = ngaySinh; }
 
     public String getQuocTich() { return quocTich; }

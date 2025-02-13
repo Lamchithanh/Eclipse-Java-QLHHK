@@ -9,6 +9,7 @@ import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.border.EmptyBorder;
 
+@SuppressWarnings("unused")
 public class MainApp extends JFrame {
     // Màu sắc chính
     private static final Color TOOLBAR_BG = new Color(47, 54, 64);           // Xám đen

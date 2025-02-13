@@ -134,6 +134,7 @@ public class ThongKeService {
     }
 
     // Xuất thống kê ra file CSV
+    @SuppressWarnings("unchecked")
     public void exportOverallStatisticsToCSV(Map<String, Object> overallStats) {
         try (FileWriter writer = new FileWriter("ThongKeHeThong.csv")) {
             // Ghi số lượng bản ghi từng bảng

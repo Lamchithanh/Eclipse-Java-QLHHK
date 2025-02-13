@@ -16,6 +16,7 @@ public enum NotificationType {
         this.symbol = symbol;
     }
 
+    @SuppressWarnings("exports")
     public Color getColor() {
         return color;
     }

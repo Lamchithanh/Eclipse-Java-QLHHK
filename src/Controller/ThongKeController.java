@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class ThongKeController {
     private ThongKePanel view;
     private ThongKeService thongKeService;
+    @SuppressWarnings("unused")
     private UserAccount currentUser;
 
     public ThongKeController(ThongKePanel view, UserAccount user) {
@@ -62,6 +63,7 @@ public class ThongKeController {
     }
 
     // Phương thức xuất thống kê tổng quan
+    @SuppressWarnings("unchecked")
     public void exportOverallStatistics() {
         try {
             JFileChooser fileChooser = new JFileChooser();

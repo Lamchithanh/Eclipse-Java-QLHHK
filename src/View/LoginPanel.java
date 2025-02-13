@@ -21,12 +21,15 @@ public class LoginPanel extends JPanel {
     private TrangChuPanel trangChuPanel;
     
     // Màu sắc chính
+    
     private Color primaryColor = new Color(25, 118, 210);      // Xanh dương đậm
     private Color secondaryColor = new Color(251, 128, 185);    // Xanh dương nhạt
-    private Color accentColor = new Color(57, 123, 24);        // Cam
+    private Color accentColor = new Color(255, 255, 255);       // color tiêu đề sân bay
+    @SuppressWarnings("unused")
     private Color textColor = new Color(55, 71, 79);           // Xám đen
     private Color backgroundColor = new Color(240, 242, 245);  // Xám nhạt
 
+    @SuppressWarnings("exports")
     public LoginPanel(UserAccountService userAccountService, JFrame mainFrame) {
         this.userAccountService = userAccountService;
         this.mainFrame = mainFrame;
@@ -136,7 +139,7 @@ public class LoginPanel extends JPanel {
 
         // Logo máy bay
         try {
-            BufferedImage originalImage = ImageIO.read(getClass().getResourceAsStream("/image/airplane9.png"));
+            BufferedImage originalImage = ImageIO.read(getClass().getResourceAsStream("/image/airplane11.png"));
             BufferedImage resizedImage = new BufferedImage(250, 250, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = resizedImage.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -231,6 +234,7 @@ public class LoginPanel extends JPanel {
         return label;
     }
 
+    @SuppressWarnings("unused")
     private JLabel createIconLabel(String text, int size, Color color) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.PLAIN, size));
@@ -367,6 +371,7 @@ public class LoginPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("unused")
     private void openManagementUI(UserAccount user) {
         JFrame managementFrame = new JFrame("Hệ Thống Quản Lý Vé Máy Bay");
         managementFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class QuanLyTaiKhoanNhanVienPanel extends JPanel {
     private UserAccountService userAccountService;
     private JFrame parentFrame;
@@ -17,6 +18,7 @@ public class QuanLyTaiKhoanNhanVienPanel extends JPanel {
     private Color accentColor = new Color(70, 130, 180);
     private Color tableHeaderColor = new Color(70, 130, 180);
 
+    @SuppressWarnings("exports")
     public QuanLyTaiKhoanNhanVienPanel(JFrame parentFrame) {
         this.userAccountService = new UserAccountService();
         this.parentFrame = parentFrame;

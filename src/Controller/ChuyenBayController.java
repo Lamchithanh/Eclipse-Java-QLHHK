@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.ArrayList;
 
+@SuppressWarnings("unused")
 public class ChuyenBayController {
     private QuanLyChuyenBay view;
     private ChuyenBayService chuyenBayService;
@@ -23,6 +24,7 @@ public class ChuyenBayController {
         this.chuyenBayService = new ChuyenBayService();
     }
 
+    @SuppressWarnings("exports")
     public void setTableModel(DefaultTableModel tableModel) {
         this.tableModel = tableModel;
     }

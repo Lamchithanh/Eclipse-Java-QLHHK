@@ -18,6 +18,7 @@ public class NhanVienController {
         this.service = new NhanVienService();
     }
 
+    @SuppressWarnings("exports")
     public void setTableModel(DefaultTableModel tableModel) {
         this.tableModel = tableModel;
     }

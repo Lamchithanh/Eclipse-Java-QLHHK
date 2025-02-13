@@ -1,0 +1,219 @@
+-- Tạo cơ sở dữ liệu
+CREATE DATABASE QuanLyChuyenBay;
+USE QuanLyChuyenBay;
+
+-- Bảng UserAccount (Tài khoản người dùng)
+CREATE TABLE UserAccount (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL
+);
+
+-- Bảng SanBay (Thông tin các sân bay)
+CREATE TABLE SanBay (
+    MaSanBay VARCHAR(10) PRIMARY KEY,
+    TenSanBay VARCHAR(100) NOT NULL
+);
+
+-- Bảng HangHangKhong (Thông tin hãng hàng không)
+CREATE TABLE HangHangKhong (
+    MaHang VARCHAR(10) PRIMARY KEY,
+    TenHang VARCHAR(100) NOT NULL,
+    DiaChi VARCHAR(200),
+    SoDienThoai VARCHAR(15),
+    Email VARCHAR(100)
+);
+
+-- Bảng ChuyenBay (Thông tin các chuyến bay)
+CREATE TABLE ChuyenBay (
+    MaChuyenBay VARCHAR(10) PRIMARY KEY,
+    MaSanBay VARCHAR(10) NOT NULL,
+    MaHang VARCHAR(10) NOT NULL,
+    MaMaybay VARCHAR(10) NOT NULL,
+    ChangBay VARCHAR(100) NOT NULL,
+    NgayBay DATE NOT NULL,
+    NhaGa VARCHAR(5) NOT NULL,
+    SoGhe INT NOT NULL CHECK (SoGhe > 0),
+    Quay INT NOT NULL,
+    TinhTrang ENUM('Sắp khởi hành', 'Đã khởi hành', 'Delay') NOT NULL,
+    FOREIGN KEY (MaSanBay) REFERENCES SanBay(MaSanBay) ON DELETE CASCADE,
+    FOREIGN KEY (MaHang) REFERENCES HangHangKhong(MaHang) ON DELETE CASCADE
+);
+
+-- Bảng LichBay (Lịch trình các chuyến bay)
+CREATE TABLE LichBay (
+    MaLichBay INT AUTO_INCREMENT PRIMARY KEY,
+    MaChuyenBay VARCHAR(10) NOT NULL,
+    GioKhoiHanh TIME NOT NULL,
+    GioHaCanh TIME NOT NULL,
+    ThoiGianBay INT, -- Tính bằng phút
+    FOREIGN KEY (MaChuyenBay) REFERENCES ChuyenBay(MaChuyenBay) ON DELETE CASCADE
+);
+
+-- Bảng NhanVien (Thông tin nhân viên)
+CREATE TABLE NhanVien (
+    MaNhanVien VARCHAR(10) PRIMARY KEY,
+    TenNhanVien VARCHAR(100) NOT NULL,
+    ChucVu ENUM('Phi công', 'Tiếp viên', 'Nhân viên mặt đất', 'Kỹ thuật') NOT NULL,
+    Luong DECIMAL(10, 2),
+    MaHang VARCHAR(10) NOT NULL,
+    FOREIGN KEY (MaHang) REFERENCES HangHangKhong(MaHang) ON DELETE CASCADE
+);
+
+-- Bảng KhachHang (Thông tin khách hàng)
+CREATE TABLE KhachHang (
+    MaKhachHang VARCHAR(10) PRIMARY KEY,
+    TenKhachHang VARCHAR(100) NOT NULL,
+    CMND VARCHAR(12) NOT NULL UNIQUE,
+    SoDienThoai VARCHAR(15),
+    DiaChi VARCHAR(200),
+    Email VARCHAR(100),
+    NgaySinh DATE,
+    QuocTich VARCHAR(50)
+);
+
+-- Bảng VeMayBay (Thông tin vé máy bay)
+CREATE TABLE VeMayBay (
+    MaVe VARCHAR(10) PRIMARY KEY,
+    MaChuyenBay VARCHAR(10) NOT NULL,
+    MaKhachHang VARCHAR(10) NOT NULL,
+    NgayDat DATE NOT NULL,
+    GiaVe DECIMAL(10,2) NOT NULL,
+    TrangThai ENUM('Đã đặt', 'Đã thanh toán', 'Đã hủy') DEFAULT 'Đã đặt',
+    FOREIGN KEY (MaChuyenBay) REFERENCES ChuyenBay(MaChuyenBay) ON DELETE CASCADE,
+    FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang) ON DELETE CASCADE
+);
+
+-- Bảng DatVe (Chi tiết các đặt vé)
+CREATE TABLE DatVe (
+    MaDatVe INT AUTO_INCREMENT PRIMARY KEY,
+    MaKhachHang VARCHAR(10) NOT NULL,
+    MaVe VARCHAR(10) NOT NULL,
+    SoLuong INT NOT NULL,
+    FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang) ON DELETE CASCADE,
+    FOREIGN KEY (MaVe) REFERENCES VeMayBay(MaVe) ON DELETE CASCADE
+);
+
+-- Bảng MayBay (Thông tin máy bay)
+CREATE TABLE MayBay (
+    MaMayBay VARCHAR(10) PRIMARY KEY,
+    LoaiMayBay VARCHAR(50) NOT NULL,
+    SucChua INT NOT NULL,
+    MaHang VARCHAR(10) NOT NULL,
+    FOREIGN KEY (MaHang) REFERENCES HangHangKhong(MaHang) ON DELETE CASCADE
+);
+
+-- Bảng ChuyenBay_MayBay (Liên kết giữa chuyến bay và máy bay)
+CREATE TABLE ChuyenBay_MayBay (
+    MaChuyenBay VARCHAR(10) NOT NULL,
+    MaMayBay VARCHAR(10) NOT NULL,
+    PRIMARY KEY (MaChuyenBay, MaMayBay),
+    FOREIGN KEY (MaChuyenBay) REFERENCES ChuyenBay(MaChuyenBay) ON DELETE CASCADE,
+    FOREIGN KEY (MaMayBay) REFERENCES MayBay(MaMayBay) ON DELETE CASCADE
+);
+
+-- Tạo chỉ mục cho các bảng
+CREATE INDEX idx_chuyenbay_ngay ON ChuyenBay(NgayBay);
+CREATE INDEX idx_khachhang_ten ON KhachHang(TenKhachHang);
+CREATE INDEX idx_vemaybay_ngaydat ON VeMayBay(NgayDat);
+
+-- Tạo bảng LichSuThanhToan (Lịch sử thanh toán)
+CREATE TABLE LichSuThanhToan (
+    MaLichSu INT AUTO_INCREMENT PRIMARY KEY,
+    MaVe VARCHAR(10) NOT NULL,
+    NgayThanhToan DATETIME NOT NULL,
+    SoTien DECIMAL(10,2) NOT NULL,
+    PhuongThucThanhToan ENUM('Tiền mặt', 'Chuyển khoản', 'Thẻ') NOT NULL,
+    FOREIGN KEY (MaVe) REFERENCES VeMayBay(MaVe) ON DELETE CASCADE
+);
+
+-- Thêm dữ liệu vào bảng SanBay
+INSERT INTO SanBay (MaSanBay, TenSanBay)
+VALUES 
+('SB01', 'Tân Sơn Nhất'),
+('SB02', 'Nội Bài'),
+('SB03', 'Đà Nẵng'),
+('SB04', 'Cần Thơ'),
+('SB05', 'Cam Ranh');
+
+-- Thêm dữ liệu vào bảng HangHangKhong
+INSERT INTO HangHangKhong (MaHang, TenHang, DiaChi, SoDienThoai, Email)
+VALUES 
+('HHK01', 'Vietnam Airlines', 'Hà Nội', '0123456789', 'vna@gmail.com'),
+('HHK02', 'VietJet Air', 'TP HCM', '0987654321', 'vietjet@gmail.com'),
+('HHK03', 'Bamboo Airways', 'Đà Nẵng', '0912345678', 'bamboo@gmail.com'),
+('HHK04', 'Pacific Airlines', 'Hải Phòng', '0934567890', 'pacific@gmail.com'),
+('HHK05', 'AirAsia', 'TP HCM', '0945678901', 'airasia@gmail.com');
+
+-- Thêm dữ liệu vào bảng ChuyenBay
+INSERT INTO ChuyenBay (MaChuyenBay, MaSanBay, MaHang, MaMaybay, ChangBay, NgayBay, NhaGa, SoGhe, Quay, TinhTrang)
+VALUES 
+('CB001', 'SB01', 'HHK01', 'MB01', 'Hà Nội - TP HCM', '2024-12-15', 'T1', 180, 9, 'Sắp khởi hành'),
+('CB002', 'SB02', 'HHK02', 'MB02', 'TP HCM - Đà Nẵng', '2024-12-16', 'T2', 200, 10, 'Delay'),
+('CB003', 'SB03', 'HHK03', 'MB03', 'Đà Nẵng - Hà Nội', '2024-12-17', 'T1', 150, 12, 'Đã khởi hành'),
+('CB004', 'SB04', 'HHK04', 'MB04', 'Hải Phòng - Cần Thơ', '2024-12-18', 'T3', 220, 8, 'Sắp khởi hành'),
+('CB005', 'SB05', 'HHK05', 'MB05', 'Cam Ranh - TP HCM', '2024-12-19', 'T1', 160, 7, 'Đã khởi hành');
+
+-- Thêm dữ liệu vào bảng LichBay
+INSERT INTO LichBay (MaChuyenBay, GioKhoiHanh, GioHaCanh, ThoiGianBay)
+VALUES 
+('CB001', '08:00:00', '10:00:00', 120),
+('CB002', '14:00:00', '16:30:00', 150),
+('CB003', '06:00:00', '07:30:00', 90),
+('CB004', '12:00:00', '15:00:00', 180),
+('CB005', '18:00:00', '19:15:00', 75);
+
+-- Thêm dữ liệu vào bảng NhanVien
+INSERT INTO NhanVien (MaNhanVien, TenNhanVien, ChucVu, Luong, MaHang)
+VALUES 
+('NV01', 'Nguyễn Văn A', 'Phi công', 50000000, 'HHK01'),
+('NV02', 'Trần Thị B', 'Tiếp viên', 20000000, 'HHK02'),
+('NV03', 'Lê Văn C', 'Kỹ thuật', 30000000, 'HHK03'),
+('NV04', 'Phạm Thị D', 'Nhân viên mặt đất', 15000000, 'HHK04'),
+('NV05', 'Hoàng Văn E', 'Phi công', 55000000, 'HHK05');
+
+-- Thêm dữ liệu vào bảng KhachHang
+INSERT INTO KhachHang (MaKhachHang, TenKhachHang, CMND, SoDienThoai, DiaChi)
+VALUES 
+('KH01', 'Nguyễn Văn F', '123456789012', '0901234567', 'Hà Nội'),
+('KH02', 'Trần Thị G', '234567890123', '0912345678', 'Đà Nẵng'),
+('KH03', 'Lê Văn H', '345678901234', '0923456789', 'TP HCM'),
+('KH04', 'Phạm Thị I', '456789012345', '0934567890', 'Cần Thơ'),
+('KH05', 'Hoàng Văn J', '567890123456', '0945678901', 'Hải Phòng');
+
+-- Thêm dữ liệu vào bảng VeMayBay
+INSERT INTO VeMayBay (MaVe, MaChuyenBay, MaKhachHang, NgayDat)
+VALUES 
+('VE01', 'CB001', 'KH01', '2024-12-01'),
+('VE02', 'CB002', 'KH02', '2024-12-02'),
+('VE03', 'CB003', 'KH03', '2024-12-03'),
+('VE04', 'CB004', 'KH04', '2024-12-04'),
+('VE05', 'CB005', 'KH05', '2024-12-05');
+
+-- Thêm dữ liệu vào bảng DatVe
+INSERT INTO DatVe (MaKhachHang, MaVe, SoLuong)
+VALUES 
+('KH01', 'VE01', 1),
+('KH02', 'VE02', 2),
+('KH03', 'VE03', 1),
+('KH04', 'VE04', 3),
+('KH05', 'VE05', 1);
+
+-- Thêm dữ liệu vào bảng MayBay
+INSERT INTO MayBay (MaMayBay, LoaiMayBay, SucChua, MaHang)
+VALUES 
+('MB01', 'Boeing 747', 300, 'HHK01'),
+('MB02', 'Airbus A320', 200, 'HHK02'),
+('MB03', 'Boeing 777', 350, 'HHK03'),
+('MB04', 'Airbus A321', 220, 'HHK04'),
+('MB05', 'Boeing 737', 250, 'HHK05');
+
+-- Thêm dữ liệu vào bảng ChuyenBay_MayBay
+INSERT INTO ChuyenBay_MayBay (MaChuyenBay, MaMayBay)
+VALUES 
+('CB001', 'MB01'),
+('CB002', 'MB02'),
+('CB003', 'MB03'),
+('CB004', 'MB04'),
+('CB005', 'MB05');

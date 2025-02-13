@@ -5,6 +5,7 @@ import Database.MYSQLDB;
 import java.sql.*;
 import java.time.LocalDateTime;
 
+@SuppressWarnings("unused")
 public class LichSuThanhToanService {
     public void addPayment(LichSuThanhToan payment) {
         Connection connection = null;

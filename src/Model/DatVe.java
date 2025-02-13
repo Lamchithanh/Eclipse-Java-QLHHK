@@ -15,6 +15,7 @@ public class DatVe {
     private String maGiamGia;
     private boolean xacNhanThanhToan;
     private List<VeMayBay> danhSachVe;
+    @SuppressWarnings("unused")
     private String maKhachHang;
     
     // Personal information
@@ -55,6 +56,7 @@ public class DatVe {
     }
 
     // Full constructor
+    @SuppressWarnings("exports")
     public DatVe(String maDatVe, ChuyenBay chuyenBay, String hoTen, String cmnd, 
                  Date ngaySinh, String gioiTinh, String quocTich, String soDienThoai,
                  String email, String diaChi, String diemDi, String diemDen,
@@ -129,10 +131,12 @@ public class DatVe {
         this.cmnd = cmnd;
     }
 
+    @SuppressWarnings("exports")
     public Date getNgaySinh() {
         return ngaySinh;
     }
 
+    @SuppressWarnings("exports")
     public void setNgaySinh(Date ngaySinh) {
         this.ngaySinh = ngaySinh;
     }
@@ -193,10 +197,12 @@ public class DatVe {
         this.diemDen = diemDen;
     }
 
+    @SuppressWarnings("exports")
     public Date getNgayBay() {
         return ngayBay;
     }
 
+    @SuppressWarnings("exports")
     public void setNgayBay(Date ngayBay) {
         this.ngayBay = ngayBay;
     }

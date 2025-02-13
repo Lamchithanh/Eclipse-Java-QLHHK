@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class DatVeService {
     private ChuyenBayService chuyenBayService = new ChuyenBayService();
 

@@ -4,6 +4,7 @@ import Controller.HangHangKhongController;
 import Model.HangHangKhong;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -124,14 +125,41 @@ public class QuanLyHangHangKhong extends JPanel {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.setRowHeight(35);
         table.setShowGrid(false);
+        table.setOpaque(true);
         table.setIntercellSpacing(new Dimension(0, 0));
         
         // Style header
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(primaryColor);
-        header.setForeground(Color.WHITE);
-        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 40));
+        header.setDefaultRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, 
+                        isSelected, hasFocus, row, column);
+                        
+                // Thiết lập style cho header
+                label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                label.setBackground(primaryColor.brighter());
+                label.setForeground(Color.WHITE);
+                label.setPreferredSize(new Dimension(label.getPreferredSize().width, 40));
+                label.setHorizontalAlignment(JLabel.CENTER);
+                
+                // Chỉ set border một lần với các effect mong muốn
+                label.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 1, new Color(200, 200, 200)),
+                        BorderFactory.createLineBorder(new Color(0, 0, 0, 30))
+                    ),
+                    BorderFactory.createEmptyBorder(8, 10, 8, 10)
+                ));
+                
+                return label;
+            }
+        });
+
+        // Tắt khả năng kéo thả và sắp xếp lại cột
+        header.setReorderingAllowed(false);
+        header.setResizingAllowed(true);
 
         // Selection listener
         table.getSelectionModel().addListSelectionListener(e -> {

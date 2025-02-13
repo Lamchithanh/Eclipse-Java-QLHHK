@@ -14,6 +14,7 @@ import Controller.DatVeController;
 import Model.ChuyenBay;
 import Model.DatVe;
 
+@SuppressWarnings("unused")
 public class QuanLyDatVeView extends JPanel {
     // Existing core components
     private DefaultTableModel tableModel;
@@ -732,6 +733,7 @@ public class QuanLyDatVeView extends JPanel {
         return txtCMND.getText().trim();
     }
 
+    @SuppressWarnings("exports")
     public Date getNgaySinhDate() {
         return new java.sql.Date(dateNgaySinh.getDate().getTime());
     }
@@ -764,6 +766,7 @@ public class QuanLyDatVeView extends JPanel {
         return txtDiemDen.getText().trim();
     }
 
+    @SuppressWarnings("exports")
     public Date getNgayBayDate() {
         return new java.sql.Date(dateNgayBay.getDate().getTime());
     }
@@ -796,6 +799,7 @@ public class QuanLyDatVeView extends JPanel {
         return txtSDTNguoiLienHe.getText().trim();
     }
 
+    @SuppressWarnings("exports")
     public DefaultTableModel getTableModel() {
         return tableModel;
     }

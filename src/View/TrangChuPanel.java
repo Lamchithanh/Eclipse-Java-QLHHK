@@ -18,12 +18,15 @@ public class TrangChuPanel extends JPanel {
     // Enhanced color scheme
     private final Color PRIMARY_DARK = new Color(15, 23, 42);      // Slate 900
     private final Color PRIMARY_MID = new Color(51, 65, 85);       // Slate 700
-    private final Color PRIMARY_LIGHT = new Color(241, 245, 249);  // Slate 100
+    @SuppressWarnings("unused")
+	private final Color PRIMARY_LIGHT = new Color(241, 245, 249);  // Slate 100
     private final Color ACCENT = new Color(56, 189, 248);         // Sky 400
+    @SuppressWarnings("unused")
     private final Color ACCENT_DARK = new Color(2, 132, 199);     // Sky 600
     private final Color SUCCESS = new Color(34, 197, 94);         // Green 500
     private final Color WARNING = new Color(234, 179, 8);         // Yellow 500
     private final Color DANGER = new Color(239, 68, 68);          // Red 500
+    @SuppressWarnings("unused")
     private final Color GLASS_BG = new Color(255, 255, 255, 200);
     private final Color GLASS_BORDER = new Color(255, 255, 255, 80);
     
@@ -37,18 +40,23 @@ public class TrangChuPanel extends JPanel {
     private UserAccount currentUser;
     private JFrame parentFrame;
     private TrangChuService trangChuService;
+    @SuppressWarnings("unused")
     private UserAccountService userAccountService;
     private JLabel clockLabel;
+    @SuppressWarnings("unused")
     private Timer clockTimer;
     private Image backgroundImage;
     private JPanel sidebarPanel;
     private JPanel mainContentPanel;
     private JPanel contentArea;
+    @SuppressWarnings("unused")
     private String activeMenuItem = "TrangChuPanel";
     private Map<String, JPanel> menuItems = new HashMap<>();
     private Map<String, JLabel> statLabels = new HashMap<>();
+    @SuppressWarnings("deprecation")
     private NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
+    @SuppressWarnings("exports")
     public TrangChuPanel(UserAccount user, JFrame parentFrame, TrangChuService trangChuService) {
         this.currentUser = user;
         this.parentFrame = parentFrame;
@@ -264,6 +272,7 @@ private void drawSidebarPattern(Graphics2D g2d) {
         container.add(itemPanel);
     }
 
+    @SuppressWarnings("unused")
     private void startMenuItemAnimation(JPanel panel, boolean isHover) {
         Timer timer = new Timer(16, null);
         final float[] alpha = {isHover ? 0.0f : 1.0f};
@@ -286,6 +295,7 @@ private void drawSidebarPattern(Graphics2D g2d) {
         timer.start();
     }
 
+    @SuppressWarnings("unused")
     private void createRippleEffect(JPanel panel, Point clickPoint) {
         Timer rippleTimer = new Timer(16, null);
         final float[] radius = {0f};
@@ -659,6 +669,7 @@ private void drawSidebarPattern(Graphics2D g2d) {
         container.add(itemPanel);
     }
 
+    @SuppressWarnings("unused")
     private void startSummaryItemAnimation(JPanel panel, boolean isHover) {
         Timer timer = new Timer(16, null);
         final float[] alpha = {isHover ? 0.0f : 1.0f};
