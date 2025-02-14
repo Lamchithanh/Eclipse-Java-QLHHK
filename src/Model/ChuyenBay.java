@@ -1,6 +1,6 @@
 package Model;
 
-public class ChuyenBay {
+public class    ChuyenBay {
     private String maChuyenBay;
     private String sanBay;
     private String changBay;
@@ -11,9 +11,13 @@ public class ChuyenBay {
     private String maMaybay;
     private String maHang;
     private double giaVe;
+    private String diemDi;    // Thêm điểm đi
+    private String diemDen;   // Thêm điểm đến
 
-    // Constructor
-    public ChuyenBay(String maChuyenBay, String sanBay, String changBay, String ngayBay, String nhaGa, int soGhe, String tinhTrang, String maMaybay, String maHang) {
+    // Constructor cập nhật
+    public ChuyenBay(String maChuyenBay, String sanBay, String changBay, 
+                     String ngayBay, String nhaGa, int soGhe, String tinhTrang, 
+                     String maMaybay, String maHang, String diemDi, String diemDen) {
         this.maChuyenBay = maChuyenBay;
         this.sanBay = sanBay;
         this.changBay = changBay;
@@ -23,10 +27,29 @@ public class ChuyenBay {
         this.tinhTrang = tinhTrang;
         this.maMaybay = maMaybay;
         this.maHang = maHang;
+        this.diemDi = diemDi;
+        this.diemDen = diemDen;
     }
 
-    // Getters và Setters
+    // Thêm getter và setter cho điểm đi
+    public String getDiemDi() {
+        return diemDi;
+    }
 
+    public void setDiemDi(String diemDi) {
+        this.diemDi = diemDi;
+    }
+
+    // Thêm getter và setter cho điểm đến
+    public String getDiemDen() {
+        return diemDen;
+    }
+
+    public void setDiemDen(String diemDen) {
+        this.diemDen = diemDen;
+    }
+
+    // Các getter và setter khác giữ nguyên
     public double getGiaVe() {
         return giaVe;
     }
@@ -106,5 +129,4 @@ public class ChuyenBay {
     public void setMaHang(String maHang) {
         this.maHang = maHang;
     }
-
 }

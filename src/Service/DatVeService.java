@@ -39,109 +39,96 @@ public class DatVeService {
     }
 
         // Thêm đặt vé mới
-        public void addDatVe(DatVe datVe) throws SQLException {
-            Connection connection = null;
-            PreparedStatement stmt = null;
-            
-            try {
-                connection = MYSQLDB.getConnection();
-                connection.setAutoCommit(false);
-        
-                // Insert vào bảng KhachHang trước
-                String sqlKhachHang = "INSERT INTO KhachHang (MaKhachHang, TenKhachHang, CMND, GioiTinh, " +
+    public void addDatVe(DatVe datVe) throws SQLException {
+        Connection connection = null;
+        PreparedStatement stmt = null;
+
+        try {
+            connection = MYSQLDB.getConnection();
+            connection.setAutoCommit(false);
+
+            // Insert vào bảng KhachHang trước
+            String sqlKhachHang = "INSERT INTO KhachHang (MaKhachHang, TenKhachHang, CMND, GioiTinh, " +
                     "NgaySinh, SoDienThoai, Email, DiaChi, QuocTich, TenNguoiLienHe, SoDienThoaiNguoiLienHe) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
                     "TenKhachHang=VALUES(TenKhachHang), SoDienThoai=VALUES(SoDienThoai), " +
                     "Email=VALUES(Email), DiaChi=VALUES(DiaChi)";
-        
-                PreparedStatement stmtKhachHang = connection.prepareStatement(sqlKhachHang);
-                stmtKhachHang.setString(1, datVe.getMaKhachHang());
-                stmtKhachHang.setString(2, datVe.getHoTen());
-                stmtKhachHang.setString(3, datVe.getCMND());
-                stmtKhachHang.setString(4, datVe.getGioiTinh());
-                stmtKhachHang.setDate(5, datVe.getNgaySinh());
-                stmtKhachHang.setString(6, datVe.getSoDienThoai());
-                stmtKhachHang.setString(7, datVe.getEmail());
-                stmtKhachHang.setString(8, datVe.getDiaChi());
-                stmtKhachHang.setString(9, datVe.getQuocTich());
-                stmtKhachHang.setString(10, datVe.getNguoiLienHe());
-                stmtKhachHang.setString(11, datVe.getSDTNguoiLienHe());
-                stmtKhachHang.executeUpdate();
-        
-                // Insert vào bảng DatVe
-                String sqlDatVe = "INSERT INTO DatVe (MaDatVe, MaKhachHang, MaChuyenBay, NgayBay, " +
+            
+            PreparedStatement stmtKhachHang = connection.prepareStatement(sqlKhachHang);
+            stmtKhachHang.setString(1, datVe.getMaKhachHang());
+            stmtKhachHang.setString(2, datVe.getHoTen());
+            stmtKhachHang.setString(3, datVe.getCMND());
+            stmtKhachHang.setString(4, datVe.getGioiTinh());
+            stmtKhachHang.setDate(5, datVe.getNgaySinh());
+            stmtKhachHang.setString(6, datVe.getSoDienThoai());
+            stmtKhachHang.setString(7, datVe.getEmail());
+            stmtKhachHang.setString(8, datVe.getDiaChi());
+            stmtKhachHang.setString(9, datVe.getQuocTich());
+            stmtKhachHang.setString(10, datVe.getNguoiLienHe());
+            stmtKhachHang.setString(11, datVe.getSDTNguoiLienHe());
+            stmtKhachHang.executeUpdate();
+
+            // Insert vào bảng DatVe
+            String sqlDatVe = "INSERT INTO DatVe (MaDatVe, MaKhachHang, MaChuyenBay, NgayBay, " +
                     "HangVe, SoLuong, TongGia, TrangThai, PhuongThucThanhToan, MaGiamGia, " +
                     "XacNhanThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-                stmt = connection.prepareStatement(sqlDatVe);
-                stmt.setString(1, datVe.getMaDatVe());
-                stmt.setString(2, datVe.getMaKhachHang());
-                stmt.setString(3, datVe.getChuyenBay().getMaChuyenBay());
-                stmt.setDate(4, datVe.getNgayBay());
-                stmt.setString(5, datVe.getHangVe());
-                stmt.setInt(6, datVe.getSoLuong());
-                stmt.setDouble(7, datVe.getTongGia());
-                stmt.setString(8, datVe.getTrangThai());
-                stmt.setString(9, datVe.getPhuongThucThanhToan());
-                stmt.setString(10, datVe.getMaGiamGia());
-                stmt.setBoolean(11, datVe.isXacNhanThanhToan());
-                stmt.executeUpdate();
-        
-                // Insert vào bảng YeuCauDacBiet
-                String sqlYeuCau = "INSERT INTO YeuCauDacBiet (MaVe, SuatAnDacBiet, HoTroYTe, " +
+            
+            stmt = connection.prepareStatement(sqlDatVe);
+            stmt.setString(1, datVe.getMaDatVe());
+            stmt.setString(2, datVe.getMaKhachHang());
+            stmt.setString(3, datVe.getChuyenBay().getMaChuyenBay());
+            stmt.setDate(4, datVe.getNgayBay());
+            stmt.setString(5, datVe.getHangVe());
+            stmt.setInt(6, datVe.getSoLuong());
+            stmt.setDouble(7, datVe.getTongGia());
+            stmt.setString(8, datVe.getTrangThai());
+            stmt.setString(9, datVe.getPhuongThucThanhToan());
+            stmt.setString(10, datVe.getMaGiamGia());
+            stmt.setBoolean(11, datVe.isXacNhanThanhToan());
+            stmt.executeUpdate();
+
+            // Insert vào bảng YeuCauDacBiet
+            String sqlYeuCau = "INSERT INTO YeuCauDacBiet (MaVe, SuatAnDacBiet, HoTroYTe, " +
                     "ChoNgoiUuTien, HanhLyDacBiet) VALUES (?, ?, ?, ?, ?)";
-                
-                PreparedStatement stmtYeuCau = connection.prepareStatement(sqlYeuCau);
-                stmtYeuCau.setString(1, datVe.getMaDatVe());
-                stmtYeuCau.setBoolean(2, datVe.isSuatAnDacBiet());
-                stmtYeuCau.setBoolean(3, datVe.isHoTroYTe());
-                stmtYeuCau.setBoolean(4, datVe.isChoNgoiUuTien());
-                stmtYeuCau.setBoolean(5, datVe.isHanhLyDacBiet());
-                stmtYeuCau.executeUpdate();
-        
-                connection.commit();
-            } catch (SQLException e) {
-                if (connection != null) {
-                    connection.rollback();
-                }
-                throw e;
-            } finally {
-                closeResources(connection, stmt, null);
+            
+            PreparedStatement stmtYeuCau = connection.prepareStatement(sqlYeuCau);
+            stmtYeuCau.setString(1, datVe.getMaDatVe());
+            stmtYeuCau.setBoolean(2, datVe.isSuatAnDacBiet());
+            stmtYeuCau.setBoolean(3, datVe.isHoTroYTe());
+            stmtYeuCau.setBoolean(4, datVe.isChoNgoiUuTien());
+            stmtYeuCau.setBoolean(5, datVe.isHanhLyDacBiet());
+            stmtYeuCau.executeUpdate();
+
+            connection.commit();
+        } catch (SQLException e) {
+            if (connection != null) {
+                connection.rollback();
             }
+            throw e;
+        } finally {
+            closeResources(connection, stmt, null);
         }
+    }
 
-
-    // Cập nhật đặt vé
+        // Cập nhật đặt vé
     public void updateDatVe(DatVe datVe) throws SQLException {
         Connection connection = null;
         PreparedStatement stmtDatVe = null;
         PreparedStatement stmtYeuCau = null;
-        
+
         try {
             connection = MYSQLDB.getConnection();
             connection.setAutoCommit(false);
 
             // Update DatVe
-            String sqlDatVe = "UPDATE DatVe SET MaChuyenBay=?, HoTen=?, CMND=?, NgaySinh=?, " +
-                "GioiTinh=?, QuocTich=?, SoDienThoai=?, Email=?, DiaChi=?, DiemDi=?, DiemDen=?, " +
-                "NgayBay=?, HangVe=?, SoLuong=?, TongGia=?, TrangThai=?, PhuongThucThanhToan=?, " +
-                "MaGiamGia=?, XacNhanThanhToan=?, NguoiLienHe=?, SDTNguoiLienHe=?, NgayCapNhat=? " +
-                "WHERE MaDatVe=?";
+            String sqlDatVe = "UPDATE DatVe SET MaChuyenBay=?, NgayBay=?, HangVe=?, SoLuong=?, " +
+                    "TongGia=?, TrangThai=?, PhuongThucThanhToan=?, MaGiamGia=?, XacNhanThanhToan=?, " +
+                    "NgayCapNhat=? WHERE MaDatVe=?";
             
             stmtDatVe = connection.prepareStatement(sqlDatVe);
             int index = 1;
             stmtDatVe.setString(index++, datVe.getChuyenBay().getMaChuyenBay());
-            stmtDatVe.setString(index++, datVe.getHoTen());
-            stmtDatVe.setString(index++, datVe.getCMND());
-            stmtDatVe.setDate(index++, datVe.getNgaySinh());
-            stmtDatVe.setString(index++, datVe.getGioiTinh());
-            stmtDatVe.setString(index++, datVe.getQuocTich());
-            stmtDatVe.setString(index++, datVe.getSoDienThoai());
-            stmtDatVe.setString(index++, datVe.getEmail());
-            stmtDatVe.setString(index++, datVe.getDiaChi());
-            stmtDatVe.setString(index++, datVe.getDiemDi());
-            stmtDatVe.setString(index++, datVe.getDiemDen());
             stmtDatVe.setDate(index++, datVe.getNgayBay());
             stmtDatVe.setString(index++, datVe.getHangVe());
             stmtDatVe.setInt(index++, datVe.getSoLuong());
@@ -150,8 +137,6 @@ public class DatVeService {
             stmtDatVe.setString(index++, datVe.getPhuongThucThanhToan());
             stmtDatVe.setString(index++, datVe.getMaGiamGia());
             stmtDatVe.setBoolean(index++, datVe.isXacNhanThanhToan());
-            stmtDatVe.setString(index++, datVe.getNguoiLienHe());
-            stmtDatVe.setString(index++, datVe.getSDTNguoiLienHe());
             stmtDatVe.setTimestamp(index++, Timestamp.valueOf(LocalDateTime.now()));
             stmtDatVe.setString(index++, datVe.getMaDatVe());
             
@@ -159,7 +144,7 @@ public class DatVeService {
 
             // Update YeuCauDacBiet
             String sqlYeuCau = "UPDATE YeuCauDacBiet SET SuatAnDacBiet=?, HoTroYTe=?, " +
-                "ChoNgoiUuTien=?, HanhLyDacBiet=? WHERE MaVe=?";
+                    "ChoNgoiUuTien=?, HanhLyDacBiet=? WHERE MaVe=?";
             
             stmtYeuCau = connection.prepareStatement(sqlYeuCau);
             stmtYeuCau.setBoolean(1, datVe.isSuatAnDacBiet());
@@ -167,7 +152,7 @@ public class DatVeService {
             stmtYeuCau.setBoolean(3, datVe.isChoNgoiUuTien());
             stmtYeuCau.setBoolean(4, datVe.isHanhLyDacBiet());
             stmtYeuCau.setString(5, datVe.getMaDatVe());
-            
+
             stmtYeuCau.executeUpdate();
 
             connection.commit();
@@ -191,11 +176,11 @@ public class DatVeService {
         }
     }
 
-    // Xóa đặt vé
+        // Xóa đặt vé
     public void deleteDatVe(String maDatVe) throws SQLException {
         Connection connection = null;
         PreparedStatement stmt = null;
-        
+
         try {
             connection = MYSQLDB.getConnection();
             connection.setAutoCommit(false);
@@ -231,30 +216,76 @@ public class DatVeService {
     }
 
     // Lấy tất cả đặt vé
-    public List<DatVe> getAllDatVe() throws SQLException {
-        List<DatVe> datVeList = new ArrayList<>();
+    // Trong DatVeService.java
+
+public List<DatVe> getAllDatVe() throws SQLException {
+    List<DatVe> datVeList = new ArrayList<>();
+    Connection connection = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+        connection = MYSQLDB.getConnection();
+        // Cập nhật câu query để join các bảng liên quan
+        String sql = "SELECT d.*, k.*, y.*, c.* " +
+                    "FROM DatVe d " +
+                    "LEFT JOIN KhachHang k ON d.MaKhachHang = k.MaKhachHang " +
+                    "LEFT JOIN YeuCauDacBiet y ON d.MaDatVe = y.MaVe " + 
+                    "LEFT JOIN ChuyenBay c ON d.MaChuyenBay = c.MaChuyenBay " +
+                    "ORDER BY d.NgayDat DESC";
+        
+        stmt = connection.prepareStatement(sql);
+        rs = stmt.executeQuery();
+
+        while (rs.next()) {
+            DatVe datVe = mapResultSetToDatVe(rs);
+            datVeList.add(datVe);
+        }
+    } finally {
+        closeResources(connection, stmt, rs);
+    }
+
+    return datVeList;
+}
+
+    public DatVe getDatVeByMa(String maDatVe) throws SQLException {
         Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        
+
         try {
             connection = MYSQLDB.getConnection();
-            String sql = "SELECT d.*, y.SuatAnDacBiet, y.HoTroYTe, y.ChoNgoiUuTien, y.HanhLyDacBiet " +
-                        "FROM DatVe d LEFT JOIN YeuCauDacBiet y ON d.MaDatVe = y.MaVe " +
-                        "ORDER BY d.NgayDat DESC";
             
+            // Cập nhật câu query để lấy thông tin từ tất cả các bảng liên quan
+            String sql = "SELECT d.*, k.*, y.*, c.*, " +
+                        "k.TenKhachHang, k.CMND, k.GioiTinh, k.NgaySinh, " +
+                        "k.SoDienThoai, k.Email, k.DiaChi, k.QuocTich, " +
+                        "k.TenNguoiLienHe, k.SoDienThoaiNguoiLienHe, " +
+                        "y.SuatAnDacBiet, y.HoTroYTe, y.ChoNgoiUuTien, y.HanhLyDacBiet, " +
+                        "c.DiemDi, c.DiemDen, c.ChangBay, c.NgayBay as NgayKhoiHanh, " +
+                        "c.NhaGa, c.GiaVe, c.TinhTrang as TinhTrangChuyenBay " +
+                        "FROM DatVe d " +
+                        "LEFT JOIN KhachHang k ON d.MaKhachHang = k.MaKhachHang " +
+                        "LEFT JOIN YeuCauDacBiet y ON d.MaDatVe = y.MaVe " +
+                        "LEFT JOIN ChuyenBay c ON d.MaChuyenBay = c.MaChuyenBay " +
+                        "WHERE d.MaDatVe = ?";
+
             stmt = connection.prepareStatement(sql);
+            stmt.setString(1, maDatVe);
+            
             rs = stmt.executeQuery();
             
-            while (rs.next()) {
-                DatVe datVe = mapResultSetToDatVe(rs);
-                datVeList.add(datVe);
+            if (rs.next()) {
+                return mapResultSetToDatVe(rs);
             }
+            
+            return null;
+
+        } catch (SQLException e) {
+            throw new SQLException("Lỗi khi tìm đặt vé với mã " + maDatVe + ": " + e.getMessage());
         } finally {
             closeResources(connection, stmt, rs);
         }
-        
-        return datVeList;
     }
 
     // Tìm kiếm đặt vé
@@ -334,41 +365,39 @@ public class DatVeService {
         ChuyenBay chuyenBay = chuyenBayService.getChuyenBayById(maChuyenBay);
         datVe.setChuyenBay(chuyenBay);
         
-        // Thông tin khách hàng
-        datVe.setHoTen(rs.getString("TenKhachHang"));
+        // Thông tin khách hàng từ bảng KhachHang
+        datVe.setHoTen(rs.getString("TenKhachHang")); // Điều chỉnh theo tên cột trong bảng KhachHang
         datVe.setCMND(rs.getString("CMND"));
-        datVe.setGioiTinh(rs.getString("GioiTinh"));
+        datVe.setGioiTinh(rs.getString("GioiTinh")); 
         datVe.setNgaySinh(rs.getDate("NgaySinh"));
         
         // Thông tin liên hệ
         datVe.setSoDienThoai(rs.getString("SoDienThoai"));
         datVe.setEmail(rs.getString("Email"));
-        datVe.setDiaChi(rs.getString("DiaChi"));
+        datVe.setDiaChi(rs.getString("DiaChi")); 
         datVe.setQuocTich(rs.getString("QuocTich"));
         
-        // Thông tin chuyến bay
+        // Thông tin đặt vé
         datVe.setNgayBay(rs.getDate("NgayBay"));
-        datVe.setHangVe(rs.getString("HangVe"));
+        datVe.setHangVe(rs.getString("HangVe")); 
         datVe.setSoLuong(rs.getInt("SoLuong"));
         datVe.setTongGia(rs.getDouble("TongGia"));
-        
-        // Thông tin thanh toán
         datVe.setTrangThai(rs.getString("TrangThai"));
-        datVe.setPhuongThucThanhToan(rs.getString("PhuongThucThanhToan"));
+        datVe.setPhuongThucThanhToan(rs.getString("PhuongThucThanhToan")); 
         datVe.setMaGiamGia(rs.getString("MaGiamGia"));
         datVe.setXacNhanThanhToan(rs.getBoolean("XacNhanThanhToan"));
         
-        // Thông tin liên hệ khẩn cấp
-        datVe.setNguoiLienHe(rs.getString("TenNguoiLienHe"));
-        datVe.setSDTNguoiLienHe(rs.getString("SoDienThoaiNguoiLienHe"));
+        // Thông tin liên hệ khẩn cấp 
+        datVe.setNguoiLienHe(rs.getString("TenNguoiLienHe")); // Điều chỉnh theo tên cột chính xác
+        datVe.setSDTNguoiLienHe(rs.getString("SoDienThoaiNguoiLienHe")); // Điều chỉnh theo tên cột chính xác
         
         // Yêu cầu đặc biệt
         datVe.setSuatAnDacBiet(rs.getBoolean("SuatAnDacBiet"));
         datVe.setHoTroYTe(rs.getBoolean("HoTroYTe"));
-        datVe.setChoNgoiUuTien(rs.getBoolean("ChoNgoiUuTien"));
+        datVe.setChoNgoiUuTien(rs.getBoolean("ChoNgoiUuTien")); 
         datVe.setHanhLyDacBiet(rs.getBoolean("HanhLyDacBiet"));
-        
-        // Thời gian
+    
+        // Thêm các trường thời gian
         Timestamp ngayDat = rs.getTimestamp("NgayDat");
         if (ngayDat != null) {
             datVe.setNgayDat(ngayDat.toLocalDateTime());
@@ -378,7 +407,7 @@ public class DatVeService {
         if (ngayCapNhat != null) {
             datVe.setNgayCapNhat(ngayCapNhat.toLocalDateTime());
         }
-        
+    
         return datVe;
     }
 
@@ -425,5 +454,11 @@ public class DatVeService {
         } finally {
             closeResources(connection, stmt, rs);
         }
+    }
+
+    public List<ChuyenBay> getAllChuyenBays() {
+        // Gọi Service của ChuyenBay để lấy danh sách chuyến bay
+        ChuyenBayService chuyenBayService = new ChuyenBayService();
+        return chuyenBayService.getAllChuyenBays();
     }
 }

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("unused")
 public class DatVeController {
     private static final Logger LOGGER = Logger.getLogger(DatVeController.class.getName());
     
@@ -36,136 +35,75 @@ public class DatVeController {
 
     public void loadInitialData() {
         try {
-            if (view == null) {
-                LOGGER.warning("View is null during loadInitialData");
-                return;
-            }
-
-            // Load danh sách chuyến bay
-            List<ChuyenBay> chuyenBays = chuyenBayService.getAllChuyenBays();
-            if (chuyenBays != null) {
-                view.updateFlightsList(chuyenBays);
-            }
-            
-            // Cập nhật bảng đặt vé
-            updateDatVeList();
+            loadFlights();
+            loadBookings();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi tải dữ liệu ban đầu", e);
-            if (view != null) {
-                view.showMessage("Không thể tải dữ liệu. Vui lòng thử lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
+            showError("Không thể tải dữ liệu. Vui lòng thử lại!");
         }
     }
 
-    public void addDatVe(DatVe booking) {
+    private void loadFlights() throws SQLException {
+        List<ChuyenBay> flights = chuyenBayService.getAllChuyenBays();
+        if (flights != null && view != null) {
+            view.updateFlightsList(flights);
+        }
+    }
+
+    private void loadBookings() throws SQLException {
+        if (view != null) {
+            List<DatVe> bookings = datVeService.getAllDatVe();
+            updateBookingTable(bookings);
+        }
+    }
+
+    public void handleAddBooking() {
         try {
-            // Validate input
-            if (!validateInput()) {
+            if (!validateBooking()) {
                 return;
             }
 
-            // Kiểm tra chuyến bay tồn tại
-            ChuyenBay chuyenBay = view.getSelectedChuyenBay();
-            if (chuyenBay == null || !chuyenBayService.isChuyenBayExists(chuyenBay.getMaChuyenBay())) {
-                view.showMessage("Chuyến bay không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Tạo mã đặt vé mới
-            String maDatVe = datVeService.generateMaDatVe();
-
-            // Tạo đối tượng đặt vé từ view
-            DatVe datVe = createDatVeFromView(maDatVe);
-
-            // Thêm đặt vé
-            datVeService.addDatVe(datVe);
-
+            DatVe booking = createBookingFromView();
+            datVeService.addDatVe(booking);
+            
             // Cập nhật số ghế của chuyến bay
-            updateFlightSeats(chuyenBay, datVe.getSoLuong());
-
+            updateFlightSeats(booking.getChuyenBay(), booking.getSoLuong());
+            
             // Cập nhật UI
-            updateDatVeList();
+            loadBookings();
             view.clearFields();
-            view.showMessage("Đặt vé thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess("Đặt vé thành công!");
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi đặt vé", e);
-            view.showMessage("Lỗi khi đặt vé: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Lỗi khi đặt vé: " + e.getMessage());
         }
     }
 
-    private DatVe createDatVeFromView(String maDatVe) {
-        DatVe datVe = new DatVe();
-        
-        // Set core booking information
-        datVe.setMaDatVe(maDatVe);
-        datVe.setChuyenBay(view.getSelectedChuyenBay());
-        datVe.setSoLuong(view.getSoLuongValue());
-        datVe.setTongGia(calculateTotalPrice());
-        datVe.setTrangThai(view.getTrangThaiText());
-        datVe.setPhuongThucThanhToan(view.getPhuongThucThanhToanText());
-        datVe.setMaGiamGia(view.getSelectedDiscountType());
-        datVe.setXacNhanThanhToan(view.isImmediatePayment());
-        
-        // Set personal information
-        datVe.setHoTen(view.getHoTenText());
-        datVe.setCMND(view.getCMNDText());
-        datVe.setNgaySinh(view.getNgaySinhDate());
-        datVe.setGioiTinh(view.getGioiTinhText());
-        datVe.setQuocTich(view.getQuocTichText());
-        
-        // Set contact information
-        datVe.setSoDienThoai(view.getSoDienThoaiText());
-        datVe.setEmail(view.getEmailText());
-        datVe.setDiaChi(view.getDiaChiText());
-        
-        // Set flight details
-        datVe.setDiemDi(view.getDiemDiText());
-        datVe.setDiemDen(view.getDiemDenText());
-        datVe.setNgayBay(view.getNgayBayDate());
-        datVe.setHangVe(view.getHangVeText());
-        
-        // Set special requests
-        datVe.setSuatAnDacBiet(view.isSuatAnDacBiet());
-        datVe.setHoTroYTe(view.isHoTroYTe());
-        datVe.setChoNgoiUuTien(view.isChoNgoiUuTien());
-        datVe.setHanhLyDacBiet(view.isHanhLyDacBiet());
-        
-        // Set emergency contact
-        datVe.setNguoiLienHe(view.getNguoiLienHeText());
-        datVe.setSDTNguoiLienHe(view.getSDTNguoiLienHeText());
-        
-        // Set timestamps
-        datVe.setNgayDat(LocalDateTime.now());
-        
-        return datVe;
-    }
-
-    public void updateDatVe() {
+    public void handleUpdateBooking() {
         try {
-            if (!validateInput()) {
+            if (!validateBooking()) {
                 return;
             }
 
-            DatVe datVe = createDatVeFromView(view.getMaDatVeText());
-            datVe.setNgayCapNhat(LocalDateTime.now());
+            DatVe booking = createBookingFromView();
+            booking.setNgayCapNhat(LocalDateTime.now());
+            datVeService.updateDatVe(booking);
 
-            datVeService.updateDatVe(datVe);
-            updateDatVeList();
+            loadBookings();
             view.clearFields();
-            view.showMessage("Cập nhật thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess("Cập nhật thành công!");
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật đặt vé", e);
-            view.showMessage("Lỗi khi cập nhật: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Lỗi khi cập nhật: " + e.getMessage());
         }
     }
 
-    public void deleteDatVe() {
+    public void handleDeleteBooking(String maDatVe) {
         try {
-            String maDatVe = view.getMaDatVeText();
             if (maDatVe == null || maDatVe.trim().isEmpty()) {
-                view.showMessage("Vui lòng chọn vé cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                showWarning("Vui lòng chọn vé cần xóa!");
                 return;
             }
 
@@ -176,134 +114,156 @@ public class DatVeController {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 datVeService.deleteDatVe(maDatVe);
-                updateDatVeList();
+                loadBookings();
                 view.clearFields();
-                view.showMessage("Xóa thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                showSuccess("Xóa thành công!");
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi xóa đặt vé", e);
-            view.showMessage("Lỗi khi xóa: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Lỗi khi xóa: " + e.getMessage());
         }
     }
 
-    public void searchDatVe(String searchQuery) {
+    public void handleSearch(String searchTerm, Date searchDate, String status) {
         try {
-            if (searchQuery == null || searchQuery.trim().isEmpty()) {
-                updateDatVeList();
-                return;
+            List<DatVe> searchResults;
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                searchResults = datVeService.getAllDatVe();
+            } else {
+                searchResults = datVeService.searchDatVe(searchTerm);
             }
-
-            List<DatVe> searchResults = datVeService.searchDatVe(searchQuery);
-            updateTableWithResults(searchResults);
+            
+            // Lọc kết quả theo ngày và trạng thái nếu có
+            if (searchDate != null || status != null) {
+                searchResults = filterSearchResults(searchResults, searchDate, status);
+            }
+            
+            updateBookingTable(searchResults);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi tìm kiếm", e);
-            view.showMessage("Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Lỗi khi tìm kiếm: " + e.getMessage());
         }
     }
 
-    private void updateTableWithResults(List<DatVe> datVeList) {
-        view.getTableModel().setRowCount(0);
-        for (DatVe datVe : datVeList) {
-            view.getTableModel().addRow(new Object[]{
-                datVe.getMaDatVe(),
-                datVe.getChuyenBay().getMaChuyenBay(),
-                datVe.getHoTen(),
-                datVe.getNgayDat(),
-                datVe.getSoLuong(),
-                String.format("%,.0f VND", datVe.getTongGia()),
-                datVe.getTrangThai()
-            });
-        }
+    private List<DatVe> filterSearchResults(List<DatVe> results, Date searchDate, String status) {
+        return results.stream()
+            .filter(booking -> {
+                boolean dateMatch = searchDate == null || 
+                    booking.getNgayBay().toLocalDate().equals(searchDate.toLocalDate());
+                boolean statusMatch = status == null || status.equals("Tất cả") || 
+                    booking.getTrangThai().equals(status);
+                return dateMatch && statusMatch;
+            })
+            .toList();
     }
 
-    private void updateFlightSeats(ChuyenBay chuyenBay, int bookedSeats) {
+    private void updateFlightSeats(ChuyenBay flight, int bookedSeats) {
         try {
-            chuyenBay.setSoGhe(chuyenBay.getSoGhe() - bookedSeats);
-            chuyenBayService.updateChuyenBay(chuyenBay);
+            int currentSeats = flight.getSoGhe();
+            flight.setSoGhe(currentSeats - bookedSeats);
+            chuyenBayService.updateChuyenBay(flight);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật số ghế", e);
         }
     }
 
-    private double calculateTotalPrice() {
-        double basePrice = view.getSelectedChuyenBay().getGiaVe();
-        int quantity = view.getSoLuongValue();
-        String discountType = view.getSelectedDiscountType();
-        String hangVe = view.getHangVeText();
+    private DatVe createBookingFromView() throws SQLException {
+        DatVe booking = new DatVe();
         
-        double total = basePrice * quantity;
-        
-        // Áp dụng giá theo hạng vé
-        switch (hangVe) {
-            case "Thương gia":
-                total *= 1.5; // Phụ thu 50%
-                break;
-            case "Hạng nhất":
-                total *= 2.0; // Phụ thu 100%
-                break;
+        // Nếu là đặt vé mới, tạo mã mới
+        String maDatVe = view.getMaDatVeText();
+        if (maDatVe == null || maDatVe.trim().isEmpty()) {
+            maDatVe = datVeService.generateMaDatVe();
         }
+        booking.setMaDatVe(maDatVe);
+
+        // Set thông tin từ view
+        booking.setChuyenBay(view.getSelectedChuyenBay());
+        booking.setSoLuong(view.getSoLuongValue());
+        booking.setHangVe(view.getHangVeText());
+        booking.setPhuongThucThanhToan(view.getPhuongThucThanhToanText());
+        booking.setMaGiamGia(view.getSelectedDiscountType());
+        booking.setXacNhanThanhToan(view.isImmediatePayment());
         
-        // Áp dụng giảm giá
-        switch (discountType) {
-            case "Học sinh/Sinh viên":
-                total *= 0.9; // Giảm 10%
-                break;
-            case "Người cao tuổi":
-                total *= 0.85; // Giảm 15%
-                break;
-            case "Khuyết tật":
-                total *= 0.8; // Giảm 20%
-                break;
-        }
+        booking.setHoTen(view.getHoTenText());
+        booking.setCMND(view.getCMNDText());
+        booking.setNgaySinh(view.getNgaySinhDate());
+        booking.setGioiTinh(view.getGioiTinhText());
+        booking.setQuocTich(view.getQuocTichText());
         
-        return total;
+        booking.setSoDienThoai(view.getSoDienThoaiText());
+        booking.setEmail(view.getEmailText());
+        booking.setDiaChi(view.getDiaChiText());
+        
+        booking.setSuatAnDacBiet(view.isSuatAnDacBiet());
+        booking.setHoTroYTe(view.isHoTroYTe());
+        booking.setChoNgoiUuTien(view.isChoNgoiUuTien());
+        booking.setHanhLyDacBiet(view.isHanhLyDacBiet());
+        
+        booking.setNguoiLienHe(view.getNguoiLienHeText());
+        booking.setSDTNguoiLienHe(view.getSDTNguoiLienHeText());
+        
+        booking.setNgayDat(LocalDateTime.now());
+        
+        return booking;
     }
 
-    private boolean validateInput() {
+    private boolean validateBooking() {
         if (!view.isValidInput()) {
             return false;
         }
 
-        // Validate số lượng ghế
-        ChuyenBay chuyenBay = view.getSelectedChuyenBay();
+        ChuyenBay flight = view.getSelectedChuyenBay();
         int requestedSeats = view.getSoLuongValue();
-        if (requestedSeats > chuyenBay.getSoGhe()) {
-            view.showMessage("Không đủ ghế trống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        
+        if (requestedSeats > flight.getSoGhe()) {
+            showError("Không đủ ghế trống cho số lượng vé yêu cầu!");
             return false;
         }
 
         return true;
     }
 
-    public void updateDatVeList() {
-        try {
-            List<DatVe> datVeList = datVeService.getAllDatVe();
-            updateTableWithResults(datVeList);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi cập nhật danh sách đặt vé", e);
-            view.showMessage("Không thể cập nhật danh sách đặt vé!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+    private void updateBookingTable(List<DatVe> bookings) {
+        if (view != null) {
+            view.getTableModel().setRowCount(0);
+            for (DatVe booking : bookings) {
+                view.getTableModel().addRow(new Object[]{
+                    booking.getMaDatVe(),
+                    booking.getChuyenBay().getMaChuyenBay(),
+                    booking.getHoTen(),
+                    booking.getNgayDat(),
+                    booking.getSoLuong(),
+                    String.format("%,.0f VND", booking.getTongGia()),
+                    booking.getTrangThai()
+                });
+            }
         }
     }
 
-    @SuppressWarnings("exports")
-    public ChuyenBayService getChuyenBayService() {
-        return chuyenBayService;
+    private void showError(String message) {
+        if (view != null) {
+            view.showMessage(message, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-	
-	public List<ChuyenBay> getAllFlights() {
-	    return chuyenBayService.getAllChuyenBays();
-	}
+    private void showWarning(String message) {
+        if (view != null) {
+            view.showMessage(message, "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        }
+    }
 
-	public List<DatVe> getAllBookings() throws SQLException {
-	    return datVeService.getAllDatVe();
-	}
+    private void showSuccess(String message) {
+        if (view != null) {
+            view.showMessage(message, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
 
-	public void updateDatVe(DatVe datVe) throws SQLException {
-	    datVeService.updateDatVe(datVe);
-	}
+    public List<ChuyenBay> getAllFlights() throws SQLException {
+        return chuyenBayService.getAllChuyenBays();
+    }
 
-	public void deleteDatVe(String maDatVe) throws SQLException {
-	    datVeService.deleteDatVe(maDatVe);
-	}
+    public List<DatVe> getAllBookings() throws SQLException {
+        return datVeService.getAllDatVe();
+    }
 }

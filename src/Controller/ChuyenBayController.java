@@ -41,15 +41,17 @@ public class ChuyenBayController {
     }
 
     public boolean validateFlightInput(String maChuyenBay, String changBay, String ngayBay, 
-                                       String sanBay, String soGhe, String maMayBay, String maHang) {
-        // Validate required fields
-        if (maChuyenBay.isEmpty() || changBay.isEmpty() || ngayBay.isEmpty() || sanBay.isEmpty()) {
-            JOptionPane.showMessageDialog(view,
-                    "Các trường bắt buộc không được để trống:\n- Mã chuyến bay\n- Chặng bay\n- Ngày bay\n- Sân bay",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
+                               String sanBay, String soGhe, String maMayBay, String maHang,
+                               String diemDi, String diemDen) {
+    // Validate required fields
+    if (maChuyenBay.isEmpty() || changBay.isEmpty() || ngayBay.isEmpty() || sanBay.isEmpty() 
+        || diemDi.isEmpty() || diemDen.isEmpty()) {
+        JOptionPane.showMessageDialog(view,
+                "Các trường bắt buộc không được để trống:\n- Mã chuyến bay\n- Chặng bay\n- Ngày bay\n- Sân bay\n- Điểm đi\n- Điểm đến",
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        return false;
+    }
 
         // Validate date format
         if (!isValidDate(ngayBay)) {
@@ -88,11 +90,22 @@ public class ChuyenBayController {
     }
 
     public boolean addFlight(String maChuyenBay, String changBay, String ngayBay, String sanBay, 
-                            String nhaGa, String soGhe, String tinhTrang, 
-                            String maMayBay, String maHang) {
+                    String nhaGa, String soGhe, String tinhTrang, 
+                    String maMayBay, String maHang, String diemDi, String diemDen, String giaVe) {
         try {
+            // Tạo chặng bay từ điểm đi và điểm đến
+            changBay = diemDi + " - " + diemDen;
+
             // Convert soGhe to integer
             int soGheInt = Integer.parseInt(soGhe);
+            
+            // Xử lý giá vé
+            // Loại bỏ dấu phẩy và khoảng trắng từ chuỗi giá vé
+            String cleanedGiaVe = giaVe.replaceAll("[,\\s]", "");
+            // Loại bỏ các số 0 ở đầu
+            cleanedGiaVe = cleanedGiaVe.replaceFirst("^0+(?!$)", "");
+            // Chuyển đổi sang double
+            double giaVeDouble = Double.parseDouble(cleanedGiaVe);
 
             // Check if flight already exists when adding
             if (chuyenBayService.isChuyenBayExists(maChuyenBay)) {
@@ -105,9 +118,13 @@ public class ChuyenBayController {
 
             // Create ChuyenBay object
             ChuyenBay chuyenBay = new ChuyenBay(
-                    maChuyenBay, sanBay, changBay, ngayBay, 
-                    nhaGa, soGheInt, tinhTrang, maMayBay, maHang
+                maChuyenBay, sanBay, changBay, ngayBay, 
+                nhaGa, soGheInt, tinhTrang, maMayBay, maHang,
+                diemDi, diemDen
             );
+            
+            // Set giá vé
+            chuyenBay.setGiaVe(giaVeDouble);
 
             // Add flight
             chuyenBayService.addChuyenBay(chuyenBay);
@@ -121,21 +138,42 @@ public class ChuyenBayController {
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             return false;
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(view,
+                    "Giá vé không hợp lệ. Vui lòng nhập số.",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
         }
     }
 
     public boolean updateFlight(String maChuyenBay, String changBay, String ngayBay, String sanBay, 
                             String nhaGa, String soGhe, String tinhTrang, 
-                            String maMayBay, String maHang) {
+                            String maMayBay, String maHang, String diemDi, String diemDen, String giaVe) {
         try {
+            // Tạo chặng bay từ điểm đi và điểm đến
+            changBay = diemDi + " - " + diemDen;
+
             // Convert soGhe to integer
             int soGheInt = Integer.parseInt(soGhe);
+            
+            // Xử lý giá vé
+            // Loại bỏ dấu phẩy và khoảng trắng từ chuỗi giá vé
+            String cleanedGiaVe = giaVe.replaceAll("[,\\s]", "");
+            // Loại bỏ các số 0 ở đầu
+            cleanedGiaVe = cleanedGiaVe.replaceFirst("^0+(?!$)", "");
+            // Chuyển đổi sang double
+            double giaVeDouble = Double.parseDouble(cleanedGiaVe);
 
             // Create ChuyenBay object
             ChuyenBay chuyenBay = new ChuyenBay(
-                    maChuyenBay, sanBay, changBay, ngayBay, 
-                    nhaGa, soGheInt, tinhTrang, maMayBay, maHang
+                maChuyenBay, sanBay, changBay, ngayBay, 
+                nhaGa, soGheInt, tinhTrang, maMayBay, maHang,
+                diemDi, diemDen
             );
+            
+            // Set giá vé
+            chuyenBay.setGiaVe(giaVeDouble);
 
             // Update flight
             chuyenBayService.updateChuyenBay(chuyenBay);
@@ -146,6 +184,12 @@ public class ChuyenBayController {
             // Handle SQL exceptions
             JOptionPane.showMessageDialog(view,
                     "Lỗi khi cập nhật chuyến bay: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(view,
+                    "Giá vé không hợp lệ. Vui lòng nhập số.",
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             return false;
