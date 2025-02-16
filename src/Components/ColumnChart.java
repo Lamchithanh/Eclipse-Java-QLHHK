@@ -1,103 +1,164 @@
 package Components;
 
-
 import javax.swing.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.title.TextTitle;
 
-import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
+@SuppressWarnings("unused")
 public class ColumnChart extends JPanel {
     private static final long serialVersionUID = 1L;
     private int[] values;
     private String[] columnNames;
     private DefaultCategoryDataset dataset;
-
     private ChartPanel chartPanel;
     private String title;
     private String titleX;
     private String titleY;
 
-    // Constructor to initialize the chart with default values
+    // Màu sắc hiện đại
+    private final Color[] MODERN_COLORS = {
+        new Color(55, 126, 184),  // Xanh dương
+        new Color(77, 175, 74),   // Xanh lá
+        new Color(152, 78, 163),  // Tím
+        new Color(255, 127, 0),   // Cam
+        new Color(228, 26, 28),   // Đỏ
+        new Color(255, 187, 120)  // Cam nhạt
+    };
+
     public ColumnChart() {
-        this.values = new int[] { 10, 30, 20 };
-        this.columnNames = new String[] { "A", "B", "C"};
+        initializeDefaultValues();
+        setupPanel();
+    }
+
+    private void initializeDefaultValues() {
+        this.values = new int[]{10, 30, 20};
+        this.columnNames = new String[]{"A", "B", "C"};
         this.title = "Biểu đồ cột";
         this.titleX = "Tháng";
         this.titleY = "Doanh thu (VND)";
-
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); // Set layout to display chart horizontally
-        dataset = new DefaultCategoryDataset();
-        chartPanel = createChartPanel(dataset); // Initialize chart panel
-        add(chartPanel); // Add chart panel to the JPanel
-        updateChart(); // Update the chart with initial data
+        this.dataset = new DefaultCategoryDataset();
     }
 
-    // Method to create a ChartPanel using a dataset
-    private ChartPanel createChartPanel(DefaultCategoryDataset data) {
-        // Create the chart using the given dataset
+    private void setupPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        chartPanel = createModernChartPanel(dataset);
+        add(chartPanel);
+        updateChart();
+    }
+
+    private ChartPanel createModernChartPanel(DefaultCategoryDataset data) {
+        JFreeChart chart = createBaseChart(data);
+        styleChart(chart);
+        return createStyledChartPanel(chart);
+    }
+
+    private JFreeChart createBaseChart(DefaultCategoryDataset data) {
         JFreeChart chart = ChartFactory.createBarChart(
-                this.title,                 // Chart title
-                this.titleX,                // X-axis label
-                this.titleY,                // Y-axis label
-                data,                       // Dataset to be plotted
-                PlotOrientation.VERTICAL,   // Vertical bar chart
-                true,                        // Show legend
-                true,                        // Enable tooltips
-                false                        // Disable URL linking
+            this.title,
+            this.titleX,
+            this.titleY,
+            data,
+            PlotOrientation.VERTICAL,
+            true,
+            true,
+            false
         );
+        return chart;
+    }
 
-        // Customize the ChartPanel for better responsiveness
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(600, 400)); // Set preferred size
-        chartPanel.setMinimumSize(new Dimension(300, 300));   // Minimum size for resizing
-        chartPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add margin around chart
-        chartPanel.setBackground(Color.white); // Set chart background color
+    private void styleChart(JFreeChart chart) {
+        // Phông chữ hiện đại
+        Font titleFont = new Font("Segoe UI", Font.BOLD, 18);
+        Font axisFont = new Font("Segoe UI", Font.PLAIN, 12);
+        Font legendFont = new Font("Segoe UI", Font.PLAIN, 11);
 
-        return chartPanel;
+        // Style tổng thể
+        chart.setBackgroundPaint(new Color(255, 255, 255, 240));
+        chart.getTitle().setFont(titleFont);
+        chart.getTitle().setPaint(new Color(51, 51, 51));
+
+        // Style plot
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setRangeGridlinePaint(new Color(230, 230, 230));
+        plot.setOutlinePaint(null);
+        plot.setDomainGridlinesVisible(false);
+
+        // Style renderer
+        BarRenderer renderer = new BarRenderer() {
+            @Override
+            public Paint getItemPaint(int row, int column) {
+                return MODERN_COLORS[column % MODERN_COLORS.length];
+            }
+        };
+        renderer.setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
+        renderer.setShadowVisible(false);
+        renderer.setDrawBarOutline(false);
+        renderer.setItemMargin(0.1);
+        plot.setRenderer(renderer);
+
+        // Style axes
+        CategoryAxis domainAxis = plot.getDomainAxis();
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        
+        domainAxis.setTickLabelFont(axisFont);
+        domainAxis.setLabelFont(axisFont);
+        rangeAxis.setTickLabelFont(axisFont);
+        rangeAxis.setLabelFont(axisFont);
+
+        // Style legend
+        chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);
+        chart.getLegend().setBackgroundPaint(null);
+        chart.getLegend().setItemFont(legendFont);
+    }
+
+    private ChartPanel createStyledChartPanel(JFreeChart chart) {
+        ChartPanel panel = new ChartPanel(chart) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(600, 400);
+            }
+        };
+        panel.setMinimumDrawWidth(0);
+        panel.setMinimumDrawHeight(0);
+        panel.setMaximumDrawWidth(Integer.MAX_VALUE);
+        panel.setMaximumDrawHeight(Integer.MAX_VALUE);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBackground(Color.WHITE);
+        panel.setMouseWheelEnabled(true);
+        panel.setDomainZoomable(true);
+        panel.setRangeZoomable(true);
+        return panel;
     }
 
     public void updateChart() {
-        // Clear the existing dataset
         dataset.clear();
-
-        // Add the new data to the dataset
         for (int i = 0; i < columnNames.length; i++) {
-            dataset.addValue(values[i], "Doanh thu", columnNames[i]); // Add new data to the dataset
+            dataset.addValue(values[i], "Doanh thu", columnNames[i]);
         }
 
-        // Create a new chart with updated dataset and titles
-        JFreeChart chart = ChartFactory.createBarChart(
-                this.title,                 // Chart title
-                this.titleX,                // X-axis label
-                this.titleY,                // Y-axis label
-                dataset,                    // Dataset to be plotted
-                PlotOrientation.VERTICAL,   // Vertical bar chart
-                true,                        // Show legend
-                true,                        // Enable tooltips
-                false                        // Disable URL linking
-        );
+        JFreeChart chart = createBaseChart(dataset);
+        styleChart(chart);
 
-        // Remove the old chart panel (if any) and create a new one
         if (chartPanel != null) {
-            remove(chartPanel); // Remove the previous chart panel from the JPanel
+            remove(chartPanel);
         }
 
-        // Create a new ChartPanel with the updated chart
-        chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(600, 400)); // Set preferred size
-        chartPanel.setMinimumSize(new Dimension(300, 300));   // Minimum size for resizing
-        chartPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add margin around chart
-        chartPanel.setBackground(Color.white); // Set chart background color
-
-        // Add the new chart panel to the JPanel
+        chartPanel = createStyledChartPanel(chart);
         add(chartPanel);
-        revalidate(); // Revalidate the JPanel layout
-        repaint(); // Repaint the JPanel to reflect changes
+        revalidate();
+        repaint();
     }
 
 

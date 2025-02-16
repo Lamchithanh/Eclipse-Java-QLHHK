@@ -1,27 +1,38 @@
 package Model;
 
-public class    ChuyenBay {
+import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+public class ChuyenBay {
     private String maChuyenBay;
     private String sanBay;
     private String changBay;
-    private String ngayBay;
+    private Date ngayBay;  // Thay đổi kiểu dữ liệu thành java.sql.Date
     private String nhaGa;
     private int soGhe;
     private String tinhTrang;
     private String maMaybay;
     private String maHang;
     private double giaVe;
-    private String diemDi;    // Thêm điểm đi
-    private String diemDen;   // Thêm điểm đến
+    private String diemDi;    
+    private String diemDen;   
+    private String gioKhoiHanh;  
+    private String gioHaCanh;    
+    private int thoiGianBay;
+    private String tenSanBay; 
 
+    // Format chuẩn cho ngày
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    
     // Constructor cập nhật
     public ChuyenBay(String maChuyenBay, String sanBay, String changBay, 
-                     String ngayBay, String nhaGa, int soGhe, String tinhTrang, 
+                     String ngayBayStr, String nhaGa, int soGhe, String tinhTrang, 
                      String maMaybay, String maHang, String diemDi, String diemDen) {
         this.maChuyenBay = maChuyenBay;
         this.sanBay = sanBay;
         this.changBay = changBay;
-        this.ngayBay = ngayBay;
+        setNgayBayFromString(ngayBayStr);
         this.nhaGa = nhaGa;
         this.soGhe = soGhe;
         this.tinhTrang = tinhTrang;
@@ -29,6 +40,49 @@ public class    ChuyenBay {
         this.maHang = maHang;
         this.diemDi = diemDi;
         this.diemDen = diemDen;
+    }
+
+    // Thêm phương thức hỗ trợ chuyển đổi String sang java.sql.Date
+    private void setNgayBayFromString(String ngayBayStr) {
+        if (ngayBayStr == null || ngayBayStr.trim().isEmpty()) {
+            this.ngayBay = null;
+            return;
+        }
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date parsed = sdf.parse(ngayBayStr);
+            this.ngayBay = new java.sql.Date(parsed.getTime());
+        } catch (ParseException e) {
+            this.ngayBay = null;
+        }
+    }
+
+    public boolean hasValidNgayBay() {
+        return ngayBay != null;
+    }
+    
+    
+    // Getter và setter cho ngayBay
+    @SuppressWarnings("exports")
+    public Date getNgayBay() {
+        return ngayBay;
+    }
+
+    @SuppressWarnings("exports")
+    public void setNgayBay(Date ngayBay) {
+        this.ngayBay = ngayBay;
+    }
+
+    // Phương thức format ngày bay để hiển thị
+    public String getNgayBayFormatted() {
+        if (ngayBay == null) {
+            return "Chưa xác định";
+        }
+        try {
+            return dateFormat.format(ngayBay);
+        } catch (Exception e) {
+            return "Lỗi định dạng";
+        }
     }
 
     // Thêm getter và setter cho điểm đi
@@ -82,13 +136,6 @@ public class    ChuyenBay {
         this.changBay = changBay;
     }
 
-    public String getNgayBay() {
-        return ngayBay;
-    }
-
-    public void setNgayBay(String ngayBay) {
-        this.ngayBay = ngayBay;
-    }
 
     public String getNhaGa() {
         return nhaGa;
@@ -128,5 +175,42 @@ public class    ChuyenBay {
 
     public void setMaHang(String maHang) {
         this.maHang = maHang;
+    }
+ // Thêm getter và setter cho các trường mới
+    public String getGioKhoiHanh() {
+        return gioKhoiHanh;
+    }
+
+    public void setGioKhoiHanh(String gioKhoiHanh) {
+        this.gioKhoiHanh = gioKhoiHanh;
+    }
+
+    public String getGioHaCanh() {
+        return gioHaCanh;
+    }
+
+    public void setGioHaCanh(String gioHaCanh) {
+        this.gioHaCanh = gioHaCanh;
+    }
+
+    public int getThoiGianBay() {
+        return thoiGianBay;
+    }
+
+    public void setThoiGianBay(int thoiGianBay) {
+        this.thoiGianBay = thoiGianBay;
+    }
+    
+    @Override
+    public String toString() {
+        return this.diemDi + " - " + this.diemDen;
+    }
+
+    public String getTenSanBay() {
+        return tenSanBay;
+    }
+
+    public void setTenSanBay(String tenSanBay) {
+        this.tenSanBay = tenSanBay;
     }
 }

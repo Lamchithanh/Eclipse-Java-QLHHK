@@ -124,6 +124,7 @@ public class DatVeController {
         }
     }
 
+    @SuppressWarnings("exports")
     public void handleSearch(String searchTerm, Date searchDate, String status) {
         try {
             List<DatVe> searchResults;

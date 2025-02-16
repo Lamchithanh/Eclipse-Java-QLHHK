@@ -2,15 +2,21 @@ package View;
 
 import javax.swing.*;
 import javax.swing.border.*;
+
+import Controller.HoaDonPDFController;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.awt.print.*;
+import java.io.File;
 
 import Model.DatVe;
 import Model.ChuyenBay;
 
+@SuppressWarnings("unused")
 public class HoaDonVeMayBayView extends JDialog {
     private DatVe datVe;
     private JPanel mainPanel;
@@ -22,6 +28,7 @@ public class HoaDonVeMayBayView extends JDialog {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
+    @SuppressWarnings("exports")
     public HoaDonVeMayBayView(JFrame parent, DatVe datVe) {
         super(parent, "Hóa Đơn Vé Máy Bay", true);
         this.datVe = datVe;
@@ -32,40 +39,85 @@ public class HoaDonVeMayBayView extends JDialog {
     }
 
     private void initializeComponents() {
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel = new JPanel(null);
         mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setPreferredSize(new Dimension(700, 500));
 
-        // Header
-        addHeader();
+        ChuyenBay flight = datVe.getChuyenBay();
 
-        // Flight Information
-        addSection("THÔNG TIN CHUYẾN BAY", createFlightInfoPanel());
+        // Tiêu đề ngày bay
+        String ngayBayFormatted = flight.getNgayBay() != null 
+            ? new SimpleDateFormat("dd/MM/yyyy").format(flight.getNgayBay())
+            : "Chưa xác định";
+        JLabel dateLabel = new JLabel("NGÀY " + ngayBayFormatted + " CHUYẾN ĐI TỪ " + 
+            flight.getDiemDi() + " ĐẾN " + flight.getDiemDen());
+        dateLabel.setFont(new Font("Arial", Font.PLAIN, 10));
+        dateLabel.setBounds(10, 10, 680, 20);
+        mainPanel.add(dateLabel);
 
-        // Passenger Information
-        addSection("THÔNG TIN HÀNH KHÁCH", createPassengerInfoPanel());
+        // Tên hành khách
+        JLabel passengerLabel = new JLabel("ĐÃ CHUẨN BỊ CHO " + datVe.getHoTen().toUpperCase());
+        passengerLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        passengerLabel.setBounds(10, 30, 680, 20);
+        mainPanel.add(passengerLabel);
 
-        // Booking Information
-        addSection("THÔNG TIN ĐẶT VÉ", createBookingInfoPanel());
+        // Mã đặt chỗ
+        JLabel bookingCodeLabel = new JLabel("Mã Đặt Chỗ: " + datVe.getMaDatVe());
+        bookingCodeLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        bookingCodeLabel.setBounds(10, 50, 680, 20);
+        mainPanel.add(bookingCodeLabel);
 
-        // Payment Information
-        addSection("THÔNG TIN THANH TOÁN", createPaymentInfoPanel());
+        // Thông tin chuyến bay
+        JPanel flightInfoPanel = new JPanel(null);
+        flightInfoPanel.setBounds(10, 80, 680, 200);
+        flightInfoPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-        // Special Requests
-        if (hasSpecialRequests()) {
-            addSection("YÊU CẦU ĐẶC BIỆT", createSpecialRequestsPanel());
-        }
+        // Thông tin chi tiết chuyến bay
+        JLabel flightNumberLabel = new JLabel("VIETNAM AIRLINES VN " + flight.getMaChuyenBay());
+        flightNumberLabel.setBounds(10, 10, 300, 20);
+        flightInfoPanel.add(flightNumberLabel);
 
-        // Terms and Conditions
-        addTermsAndConditions();
+        JLabel routeLabel = new JLabel(flight.getDiemDi() + " → " + flight.getDiemDen());
+        routeLabel.setBounds(10, 30, 300, 20);
+        flightInfoPanel.add(routeLabel);
 
-        // Add buttons
-        addButtonPanel();
+        JLabel departureLabel = new JLabel("Giờ đi: " + 
+            (flight.getGioKhoiHanh() != null ? flight.getGioKhoiHanh() : "Chưa xác định"));
+        departureLabel.setBounds(10, 50, 300, 20);
+        flightInfoPanel.add(departureLabel);
 
+        JLabel arrivalLabel = new JLabel("Giờ đến: " + 
+            (flight.getGioHaCanh() != null ? flight.getGioHaCanh() : "Chưa xác định"));
+        arrivalLabel.setBounds(10, 70, 300, 20);
+        flightInfoPanel.add(arrivalLabel);
+
+        JLabel seatClassLabel = new JLabel("Hạng vé: " + datVe.getHangVe());
+        seatClassLabel.setBounds(10, 90, 300, 20);
+        flightInfoPanel.add(seatClassLabel);
+
+        mainPanel.add(flightInfoPanel);
+
+        // Thêm nút
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton printButton = new JButton("In");
+        JButton saveButton = new JButton("Lưu PDF");
+        JButton closeButton = new JButton("Đóng");
+
+        buttonPanel.add(printButton);
+        buttonPanel.add(saveButton);
+        buttonPanel.add(closeButton);
+
+        buttonPanel.setBounds(10, 300, 680, 50);
+        mainPanel.add(buttonPanel);
+
+        // Các sự kiện nút
+        printButton.addActionListener(e -> printInvoice());
+        saveButton.addActionListener(e -> savePDF());
+        closeButton.addActionListener(e -> dispose());
+
+        // Thêm cuộn
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         this.add(scrollPane);
     }
 
@@ -78,16 +130,21 @@ public class HoaDonVeMayBayView extends JDialog {
         addLabelValuePair(panel, "Điểm Khởi Hành:", flight.getDiemDi());
         addLabelValuePair(panel, "Điểm Đến:", flight.getDiemDen());
         
-        // Xử lý ngày bay an toàn
-        String ngayBayStr = "N/A";
-        if (flight.getNgayBay() != null) {
-            try {
-                ngayBayStr = dateFormat.format(flight.getNgayBay());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        addLabelValuePair(panel, "Ngày Bay:", ngayBayStr);
+        // Hiển thị giờ khởi hành và hạ cánh
+        addLabelValuePair(panel, "Giờ Khởi Hành:", 
+            flight.getGioKhoiHanh() != null ? flight.getGioKhoiHanh() : "Chưa xác định");
+        addLabelValuePair(panel, "Giờ Hạ Cánh:", 
+            flight.getGioHaCanh() != null ? flight.getGioHaCanh() : "Chưa xác định");
+        
+        // Hiển thị thời gian bay
+        addLabelValuePair(panel, "Thời Gian Bay:", 
+            flight.getThoiGianBay() > 0 ? 
+            flight.getThoiGianBay() + " phút" : "Chưa xác định");
+        
+        addLabelValuePair(panel, "Ngày Bay:", 
+            flight.getNgayBay() != null ? 
+            new SimpleDateFormat("dd/MM/yyyy").format(flight.getNgayBay()) : 
+            "Chưa xác định");
         
         addLabelValuePair(panel, "Chặng Bay:", flight.getChangBay());
         addLabelValuePair(panel, "Nhà Ga:", flight.getNhaGa());
@@ -352,16 +409,32 @@ public class HoaDonVeMayBayView extends JDialog {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Lưu Hóa Đơn PDF");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setSelectedFile(new File("HoaDon_" + datVe.getMaDatVe() + ".pdf")); // Đặt tên file mặc định
         
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            // Implement PDF saving logic here
-            JOptionPane.showMessageDialog(this,
-                "Tính năng đang được phát triển",
-                "Thông báo",
-                JOptionPane.INFORMATION_MESSAGE);
+            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+            // Thêm đuôi .pdf nếu người dùng không nhập
+            if (!filePath.toLowerCase().endsWith(".pdf")) {
+                filePath += ".pdf";
+            }
+            
+            try {
+                HoaDonPDFController.xuatHoaDonPDF(datVe, filePath);
+                JOptionPane.showMessageDialog(this,
+                    "Xuất PDF thành công!\nFile được lưu tại: " + filePath,
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Lỗi khi xuất PDF: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         }
     }
 
+    @SuppressWarnings("exports")
     public static void showInvoice(Window parent, DatVe datVe) {
         JFrame parentFrame;
         if (parent instanceof JFrame) {

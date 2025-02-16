@@ -6,6 +6,11 @@ import Service.TrangChuService;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
+
+import Components.ColumnChart;
+import Components.LineChart;
+import Components.PieChart;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
@@ -571,17 +576,241 @@ private void drawSidebarPattern(Graphics2D g2d) {
     
 
     private JPanel createEnhancedDashboardContent() {
+        // Tạo panel chính với BoxLayout theo chiều dọc
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        contentPanel.add(createEnhancedSummarySection());
-        contentPanel.add(Box.createVerticalStrut(20));
+        // Tạo grid layout 2x2 cho các biểu đồ
+        JPanel chartsPanel = new JPanel(new GridLayout(2, 2, 20, 20));
+        chartsPanel.setOpaque(false);
 
+        // Chuẩn bị dữ liệu chung cho tháng
+        int monthCount = 6;
+        String[] months = new String[monthCount];
+        for (int i = 0; i < monthCount; i++) {
+            months[i] = "T" + (i + 1);
+        }
+
+        // 1. Column Chart: Thống kê chuyến bay theo tháng
+        ColumnChart flightChart = createFlightChart(months, monthCount);
+
+        // 2. Line Chart: Doanh thu theo tháng
+        LineChart revenueChart = createRevenueChart(months, monthCount);
+
+        // 3. Pie Chart: Phân bố vé theo hạng
+        PieChart ticketClassChart = createTicketClassChart();
+
+        // 4. Pie Chart: Top điểm đến phổ biến
+        PieChart destinationChart = createDestinationChart();
+
+        // Thêm các biểu đồ vào panel với wrapper
+        chartsPanel.add(wrapChartInPanel(flightChart, "Thống kê chuyến bay", "Số lượng chuyến bay theo tháng"));
+        chartsPanel.add(wrapChartInPanel(revenueChart, "Biểu đồ doanh thu", "Doanh thu theo tháng"));
+        chartsPanel.add(wrapChartInPanel(ticketClassChart, "Phân bố vé", "Tỷ lệ các hạng vé"));
+        chartsPanel.add(wrapChartInPanel(destinationChart, "Điểm đến phổ biến", "Top điểm đến được chọn nhiều nhất"));
+
+        contentPanel.add(chartsPanel);
         return contentPanel;
     }
 
+    private ColumnChart createFlightChart(String[] months, int monthCount) {
+        ColumnChart flightChart = new ColumnChart();
+        flightChart.setTitle("Thống kê chuyến bay theo tháng");
+        flightChart.setTitleX("Tháng");
+        flightChart.setTitleY("Số chuyến bay");
+        
+        int[] flightValues = new int[monthCount];
+        for (int i = 0; i < monthCount; i++) {
+            try {
+                flightValues[i] = trangChuService.getFlightCountByMonth(i + 1);
+            } catch (Exception e) {
+                flightValues[i] = 0; // Giá trị mặc định nếu có lỗi
+            }
+        }
+        
+        flightChart.setValues(flightValues);
+        flightChart.setColumnNames(months);
+        flightChart.updateChart();
+        
+        return flightChart;
+    }
+
+    private LineChart createRevenueChart(String[] months, int monthCount) {
+        LineChart revenueChart = new LineChart();
+        revenueChart.setTitle("Doanh thu theo tháng");
+        
+        double[] revenueValues = new double[monthCount];
+        for (int i = 0; i < monthCount; i++) {
+            try {
+                revenueValues[i] = trangChuService.getRevenueByMonth(i + 1) / 1000000.0; // Chuyển về đơn vị triệu
+            } catch (Exception e) {
+                revenueValues[i] = 0.0; // Giá trị mặc định nếu có lỗi
+            }
+        }
+        
+        revenueChart.setValues(convertDoubleArrayToInt1(revenueValues));
+        revenueChart.setColumnNames(months);
+        revenueChart.setSeries("Doanh thu (triệu VNĐ)");
+        revenueChart.updateChart();
+        
+        return revenueChart;
+    }
+
+    private PieChart createTicketClassChart() {
+        PieChart ticketClassChart = new PieChart();
+        ticketClassChart.setTitle("Phân bố vé theo hạng");
+        
+        String[] ticketClasses = {"Phổ thông", "Thương gia", "Hạng nhất"};
+        int[] ticketValues = new int[ticketClasses.length];
+        
+        for (int i = 0; i < ticketClasses.length; i++) {
+            try {
+                ticketValues[i] = trangChuService.getTicketCountByClass(ticketClasses[i]);
+            } catch (Exception e) {
+                ticketValues[i] = 0; // Giá trị mặc định nếu có lỗi
+            }
+        }
+        
+        ticketClassChart.setValues(ticketValues);
+        ticketClassChart.setColumnNames(ticketClasses);
+        ticketClassChart.updateChart();
+        
+        return ticketClassChart;
+    }
+
+    private PieChart createDestinationChart() {
+        PieChart destinationChart = new PieChart();
+        destinationChart.setTitle("Top điểm đến phổ biến");
+        
+        Map<String, Integer> topDestinations = trangChuService.getTopDestinations(5);
+        if (topDestinations != null && !topDestinations.isEmpty()) {
+            int[] destValues = new int[topDestinations.size()];
+            String[] destNames = new String[topDestinations.size()];
+            
+            int index = 0;
+            for (Map.Entry<String, Integer> entry : topDestinations.entrySet()) {
+                destNames[index] = entry.getKey();
+                destValues[index] = entry.getValue();
+                index++;
+            }
+            
+            destinationChart.setValues(destValues);
+            destinationChart.setColumnNames(destNames);
+            destinationChart.updateChart();
+        } else {
+            // Xử lý trường hợp không có dữ liệu
+            destinationChart.setValues(new int[]{0});
+            destinationChart.setColumnNames(new String[]{"Không có dữ liệu"});
+            destinationChart.updateChart();
+        }
+        
+        return destinationChart;
+    }
+
+    private JPanel wrapChartInPanel(JPanel chart, String title, String description) {
+        JPanel wrapper = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                setupGraphicsQuality(g2d);
+                
+                // Glass effect background
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(255, 255, 255, 230),
+                    0, getHeight(), new Color(255, 255, 255, 200)
+                );
+                g2d.setPaint(gradient);
+                
+                RoundRectangle2D.Float rect = new RoundRectangle2D.Float(
+                    0, 0, getWidth(), getHeight(), CARD_RADIUS, CARD_RADIUS
+                );
+                g2d.fill(rect);
+            }
+        };
+        wrapper.setOpaque(false);
+        wrapper.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Panel for title and description
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setOpaque(false);
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(PRIMARY_DARK);
+        
+        JLabel descLabel = new JLabel(description);
+        descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        descLabel.setForeground(PRIMARY_MID);
+        
+        headerPanel.add(titleLabel);
+        headerPanel.add(Box.createVerticalStrut(5));
+        headerPanel.add(descLabel);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        
+        wrapper.add(headerPanel, BorderLayout.NORTH);
+        wrapper.add(chart, BorderLayout.CENTER);
+        
+        return wrapper;
+    }
+
+    private int[] convertDoubleArrayToInt1(double[] doubleArray) {
+        int[] intArray = new int[doubleArray.length];
+        for (int i = 0; i < doubleArray.length; i++) {
+            intArray[i] = (int) Math.round(doubleArray[i]);
+        }
+        return intArray;
+    }
+
+    @SuppressWarnings("unused")
+    private int[] convertDoubleArrayToInt(double[] doubleArray) {
+        int[] intArray = new int[doubleArray.length];
+        for (int i = 0; i < doubleArray.length; i++) {
+            intArray[i] = (int) Math.round(doubleArray[i]);
+        }
+        return intArray;
+    }
+
+    @SuppressWarnings("unused")
+    private JPanel wrapChartInPanel(JPanel chart, String title) {
+        JPanel wrapper = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                setupGraphicsQuality(g2d);
+                
+                // Glass effect background
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(255, 255, 255, 230),
+                    0, getHeight(), new Color(255, 255, 255, 200)
+                );
+                g2d.setPaint(gradient);
+                
+                RoundRectangle2D.Float rect = new RoundRectangle2D.Float(
+                    0, 0, getWidth(), getHeight(), CARD_RADIUS, CARD_RADIUS
+                );
+                g2d.fill(rect);
+            }
+        };
+        wrapper.setOpaque(false);
+        wrapper.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(PRIMARY_DARK);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        
+        wrapper.add(titleLabel, BorderLayout.NORTH);
+        wrapper.add(chart, BorderLayout.CENTER);
+        
+        return wrapper;
+    }
+
+    @SuppressWarnings("unused")
     private JPanel createEnhancedSummarySection() {
         JPanel summaryPanel = new JPanel(new BorderLayout()) {
             @Override

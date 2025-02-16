@@ -15,51 +15,175 @@ public class ChuyenBayService {
 
 	// Lấy danh sách chuyến bay
 	public List<ChuyenBay> getAllChuyenBays() {
-		List<ChuyenBay> danhSachChuyenBay = new ArrayList<>();
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-	
-		try {
-			conn = MYSQLDB.getConnection();
-			if (conn == null) {
-				LOGGER.severe("Không thể kết nối đến cơ sở dữ liệu.");
-				return danhSachChuyenBay;
-			}
-	
-			String query = "SELECT MaChuyenBay, MaSanBay, ChangBay, NgayBay, NhaGa, SoGhe, TinhTrang, MaMayBay, MaHang, DiemDi, DiemDen, GiaVe FROM ChuyenBay";
-			stmt = conn.prepareStatement(query);
-			rs = stmt.executeQuery();
-	
-			while (rs.next()) {
-				ChuyenBay chuyenBay = new ChuyenBay(
-					rs.getString("MaChuyenBay"),
-					rs.getString("MaSanBay"),
-					rs.getString("ChangBay"),
-					rs.getString("NgayBay"),
-					rs.getString("NhaGa"),
-					rs.getInt("SoGhe"),
-					rs.getString("TinhTrang"),
-					rs.getString("MaMayBay"),
-					rs.getString("MaHang"),
-					rs.getString("DiemDi"),
-					rs.getString("DiemDen")
-				);
-				chuyenBay.setGiaVe(rs.getDouble("GiaVe")); // Thêm giá vé
-				danhSachChuyenBay.add(chuyenBay);
-			}
-		} catch (SQLException e) {
-			LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách chuyến bay", e);
-		} finally {
-			try {
-				if (rs != null) rs.close();
-				if (stmt != null) stmt.close();
-				if (conn != null) MYSQLDB.closeConnection(conn);
-			} catch (SQLException e) {
-				LOGGER.log(Level.SEVERE, "Lỗi khi đóng kết nối", e);
-			}
-		}
-		return danhSachChuyenBay;
+	    List<ChuyenBay> danhSachChuyenBay = new ArrayList<>();
+	    Connection conn = null;
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+
+	    try {
+	        conn = MYSQLDB.getConnection();
+	        if (conn == null) {
+	            LOGGER.severe("Không thể kết nối đến cơ sở dữ liệu.");
+	            return danhSachChuyenBay;
+	        }
+
+	        // Thêm join với bảng LichBay và SanBay
+	        String query = """
+	            SELECT c.*, l.GioKhoiHanh, l.GioHaCanh, l.ThoiGianBay, s.TenSanBay
+	            FROM ChuyenBay c
+	            LEFT JOIN LichBay l ON c.MaChuyenBay = l.MaChuyenBay
+	            JOIN SanBay s ON c.MaSanBay = s.MaSanBay
+	        """;
+	        stmt = conn.prepareStatement(query);
+	        rs = stmt.executeQuery();
+
+	        while (rs.next()) {
+	            ChuyenBay chuyenBay = new ChuyenBay(
+	                rs.getString("MaChuyenBay"),
+	                rs.getString("MaSanBay"),
+	                rs.getString("ChangBay"),
+	                rs.getString("NgayBay"),
+	                rs.getString("NhaGa"),
+	                rs.getInt("SoGhe"),
+	                rs.getString("TinhTrang"),
+	                rs.getString("MaMayBay"),
+	                rs.getString("MaHang"),
+	                rs.getString("DiemDi"),
+	                rs.getString("DiemDen")
+	            );
+	            chuyenBay.setGiaVe(rs.getDouble("GiaVe"));
+
+	            // Thêm thông tin từ LichBay
+	            chuyenBay.setGioKhoiHanh(rs.getString("GioKhoiHanh"));
+	            chuyenBay.setGioHaCanh(rs.getString("GioHaCanh"));
+	            chuyenBay.setThoiGianBay(rs.getInt("ThoiGianBay"));
+
+	            // Lấy tên sân bay từ bảng SanBay
+	            String tenSanBay = rs.getString("TenSanBay");
+	            chuyenBay.setTenSanBay(tenSanBay);
+
+	            danhSachChuyenBay.add(chuyenBay);
+	        }
+	    } catch (SQLException e) {
+	        LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách chuyến bay", e);
+	    } finally {
+	        try {
+	            if (rs != null) rs.close();
+	            if (stmt != null) stmt.close();
+	            if (conn != null) MYSQLDB.closeConnection(conn);
+	        } catch (SQLException e) {
+	            LOGGER.log(Level.SEVERE, "Lỗi khi đóng kết nối", e);
+	        }
+	    }
+	    return danhSachChuyenBay;
+	}
+
+	public ChuyenBay getChuyenBayById(String maChuyenBay) {
+	    Connection conn = null;
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+
+	    try {
+	        conn = MYSQLDB.getConnection();
+	        if (conn == null) {
+	            LOGGER.severe("Không thể kết nối đến cơ sở dữ liệu.");
+	            return null;
+	        }
+
+	        // Thêm join với bảng LichBay
+	        String query = """
+	            SELECT c.*, l.GioKhoiHanh, l.GioHaCanh, l.ThoiGianBay 
+	            FROM ChuyenBay c 
+	            LEFT JOIN LichBay l ON c.MaChuyenBay = l.MaChuyenBay 
+	            WHERE c.MaChuyenBay = ?
+	        """;
+	        stmt = conn.prepareStatement(query);
+	        stmt.setString(1, maChuyenBay);
+	        
+	        rs = stmt.executeQuery();
+
+	        if (rs.next()) {
+	            ChuyenBay chuyenBay = new ChuyenBay(
+	                rs.getString("MaChuyenBay"),
+	                rs.getString("MaSanBay"),
+	                rs.getString("ChangBay"),
+	                rs.getString("NgayBay"),
+	                rs.getString("NhaGa"),
+	                rs.getInt("SoGhe"),
+	                rs.getString("TinhTrang"),
+	                rs.getString("MaMayBay"),
+	                rs.getString("MaHang"),
+	                rs.getString("DiemDi"),
+	                rs.getString("DiemDen")
+	            );
+	            chuyenBay.setGiaVe(rs.getDouble("GiaVe"));
+	            
+	            // Thêm thông tin từ LichBay
+	            chuyenBay.setGioKhoiHanh(rs.getString("GioKhoiHanh"));
+	            chuyenBay.setGioHaCanh(rs.getString("GioHaCanh"));
+	            chuyenBay.setThoiGianBay(rs.getInt("ThoiGianBay"));
+	            
+	            return chuyenBay;
+	        }
+	    } catch (SQLException e) {
+	        LOGGER.log(Level.SEVERE, "Lỗi khi lấy chuyến bay theo mã", e);
+	    } finally {
+	        try {
+	            if (rs != null) rs.close();
+	            if (stmt != null) stmt.close();
+	            if (conn != null) MYSQLDB.closeConnection(conn);
+	        } catch (SQLException e) {
+	            LOGGER.log(Level.SEVERE, "Lỗi khi đóng kết nối", e);
+	        }
+	    }
+	    
+	    return null;
+	}
+
+	// Thêm phương thức để thêm/cập nhật thông tin LichBay
+	public void themLichBay(String maChuyenBay, String gioKhoiHanh, String gioHaCanh, int thoiGianBay) throws SQLException {
+	    Connection conn = null;
+	    PreparedStatement stmt = null;
+
+	    try {
+	        conn = MYSQLDB.getConnection();
+	        if (conn == null) {
+	            throw new SQLException("Không thể kết nối đến cơ sở dữ liệu.");
+	        }
+
+	        // Sử dụng INSERT ... ON DUPLICATE KEY UPDATE để xử lý trường hợp đã tồn tại
+	        String insertQuery = """
+	            INSERT INTO LichBay (MaChuyenBay, GioKhoiHanh, GioHaCanh, ThoiGianBay) 
+	            VALUES (?, ?, ?, ?) 
+	            ON DUPLICATE KEY UPDATE 
+	            GioKhoiHanh = ?, 
+	            GioHaCanh = ?, 
+	            ThoiGianBay = ?
+	        """;
+
+	        stmt = conn.prepareStatement(insertQuery);
+	        stmt.setString(1, maChuyenBay);
+	        stmt.setString(2, gioKhoiHanh);
+	        stmt.setString(3, gioHaCanh);
+	        stmt.setInt(4, thoiGianBay);
+	        
+	        // Các tham số cho ON DUPLICATE KEY UPDATE
+	        stmt.setString(5, gioKhoiHanh);
+	        stmt.setString(6, gioHaCanh);
+	        stmt.setInt(7, thoiGianBay);
+
+	        stmt.executeUpdate();
+	    } catch (SQLException e) {
+	        LOGGER.log(Level.SEVERE, "Lỗi khi thêm lịch bay", e);
+	        throw e;
+	    } finally {
+	        try {
+	            if (stmt != null) stmt.close();
+	            if (conn != null) MYSQLDB.closeConnection(conn);
+	        } catch (SQLException e) {
+	            LOGGER.log(Level.SEVERE, "Lỗi khi đóng kết nối", e);
+	        }
+	    }
 	}
 	
 	
@@ -133,7 +257,7 @@ public class ChuyenBayService {
 			stmt.setString(1, chuyenBay.getMaChuyenBay());
 			stmt.setString(2, chuyenBay.getSanBay());
 			stmt.setString(3, chuyenBay.getChangBay());
-			stmt.setString(4, chuyenBay.getNgayBay());
+			stmt.setDate(3, chuyenBay.getNgayBay());
 			stmt.setString(5, chuyenBay.getNhaGa());
 			stmt.setInt(6, chuyenBay.getSoGhe());
 			stmt.setString(7, chuyenBay.getTinhTrang());
@@ -214,7 +338,7 @@ public class ChuyenBayService {
 			stmt = conn.prepareStatement(updateQuery);
 			stmt.setString(1, chuyenBay.getSanBay());
 			stmt.setString(2, chuyenBay.getChangBay());
-			stmt.setString(3, chuyenBay.getNgayBay());
+			stmt.setDate(3, chuyenBay.getNgayBay());
 			stmt.setString(4, chuyenBay.getNhaGa());
 			stmt.setInt(5, chuyenBay.getSoGhe());
 			stmt.setString(6, chuyenBay.getTinhTrang());
@@ -331,55 +455,4 @@ public class ChuyenBayService {
 			MYSQLDB.closeConnection(conn);
 		}
 	}
-
-    public ChuyenBay getChuyenBayById(String maChuyenBay) {
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-	
-		try {
-			conn = MYSQLDB.getConnection();
-			if (conn == null) {
-				LOGGER.severe("Không thể kết nối đến cơ sở dữ liệu.");
-				return null;
-			}
-	
-			String query = "SELECT MaChuyenBay, MaSanBay, ChangBay, NgayBay, NhaGa, SoGhe, TinhTrang, MaMayBay, MaHang, DiemDi, DiemDen, GiaVe FROM ChuyenBay WHERE MaChuyenBay = ?";
-			stmt = conn.prepareStatement(query);
-			stmt.setString(1, maChuyenBay);
-			
-			rs = stmt.executeQuery();
-	
-			if (rs.next()) {
-				ChuyenBay chuyenBay = new ChuyenBay(
-					rs.getString("MaChuyenBay"),
-					rs.getString("MaSanBay"),
-					rs.getString("ChangBay"),
-					rs.getString("NgayBay"),
-					rs.getString("NhaGa"),
-					rs.getInt("SoGhe"),
-					rs.getString("TinhTrang"),
-					rs.getString("MaMayBay"),
-					rs.getString("MaHang"),
-					rs.getString("DiemDi"),
-					rs.getString("DiemDen")
-				);
-				chuyenBay.setGiaVe(rs.getDouble("GiaVe")); // Thêm giá vé
-				return chuyenBay;
-			}
-		} catch (SQLException e) {
-			LOGGER.log(Level.SEVERE, "Lỗi khi lấy chuyến bay theo mã", e);
-		} finally {
-			try {
-				if (rs != null) rs.close();
-				if (stmt != null) stmt.close();
-				if (conn != null) MYSQLDB.closeConnection(conn);
-			} catch (SQLException e) {
-				LOGGER.log(Level.SEVERE, "Lỗi khi đóng kết nối", e);
-			}
-		}
-		
-		return null;
-	}
-
 }
