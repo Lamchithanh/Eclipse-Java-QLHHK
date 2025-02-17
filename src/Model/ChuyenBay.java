@@ -27,8 +27,9 @@ public class ChuyenBay {
     
     // Constructor cập nhật
     public ChuyenBay(String maChuyenBay, String sanBay, String changBay, 
-                     String ngayBayStr, String nhaGa, int soGhe, String tinhTrang, 
-                     String maMaybay, String maHang, String diemDi, String diemDen) {
+                    String ngayBayStr, String nhaGa, int soGhe, String tinhTrang, 
+                    String maMaybay, String maHang, String diemDi, String diemDen, 
+                    String tenSanBay) {
         this.maChuyenBay = maChuyenBay;
         this.sanBay = sanBay;
         this.changBay = changBay;
@@ -40,6 +41,7 @@ public class ChuyenBay {
         this.maHang = maHang;
         this.diemDi = diemDi;
         this.diemDen = diemDen;
+        this.tenSanBay = tenSanBay;
     }
 
     // Thêm phương thức hỗ trợ chuyển đổi String sang java.sql.Date
@@ -207,10 +209,15 @@ public class ChuyenBay {
     }
 
     public String getTenSanBay() {
-        return tenSanBay;
+        return tenSanBay != null ? tenSanBay : sanBay;
     }
 
     public void setTenSanBay(String tenSanBay) {
         this.tenSanBay = tenSanBay;
+    }
+
+    public String getMaSanBay() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMaSanBay'");
     }
 }

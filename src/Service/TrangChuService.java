@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TrangChuService {
@@ -24,17 +25,13 @@ public class TrangChuService {
 
     public int getTodayFlightsCount() {
         int todayFlights = 0;
-        LocalDate today = LocalDate.now();
-        String query = "SELECT COUNT(*) FROM ChuyenBay WHERE DATE(NgayBay) = ?";
-
+        String query = "SELECT COUNT(*) FROM ChuyenBay WHERE DATE(NgayBay) = CURRENT_DATE";
+    
         try (Connection connection = MYSQLDB.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            
-            stmt.setDate(1, java.sql.Date.valueOf(today));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    todayFlights = rs.getInt(1);
-                }
+             PreparedStatement stmt = connection.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                todayFlights = rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,18 +39,22 @@ public class TrangChuService {
         return todayFlights;
     }
 
+    @SuppressWarnings("unused")
     public double getTodayRevenue() {
         double todayRevenue = 0;
         LocalDate today = LocalDate.now();
-        String query = "SELECT SUM(TongGia) FROM DatVe WHERE DATE(NgayDat) = ? AND TrangThai = 'Đã thanh toán'";
-
+        // Sửa lại câu query để lấy dữ liệu từ cả DatVe và VeMayBay
+        String query = "SELECT COALESCE(SUM(TongGia), 0) FROM DatVe WHERE DATE(NgayDat) = CURRENT_DATE " + 
+                      "AND TrangThai = 'Đã thanh toán' " +
+                      "UNION ALL " +
+                      "SELECT COALESCE(SUM(GiaVe), 0) FROM VeMayBay WHERE DATE(NgayDat) = CURRENT_DATE " +
+                      "AND TrangThai = 'Đã thanh toán'";
+    
         try (Connection connection = MYSQLDB.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
-            
-            stmt.setDate(1, java.sql.Date.valueOf(today));
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    todayRevenue = rs.getDouble(1);
+                while(rs.next()) {
+                    todayRevenue += rs.getDouble(1);
                 }
             }
         } catch (SQLException e) {
@@ -149,33 +150,55 @@ public class TrangChuService {
 
     public int getTodayTicketsSold() {
         int todayTickets = 0;
-        LocalDate today = LocalDate.now();
-        String query = "SELECT COUNT(*) FROM DatVe WHERE DATE(NgayDat) = ? AND TrangThai = 'Đã thanh toán'";
-
+        String query = "SELECT COUNT(*) FROM VeMayBay WHERE DATE(NgayDat) = CURRENT_DATE " +
+                      "AND TrangThai = 'Đã thanh toán'";
+    
         try (Connection connection = MYSQLDB.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            
-            stmt.setDate(1, java.sql.Date.valueOf(today));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    todayTickets = rs.getInt(1);
-                }
+             PreparedStatement stmt = connection.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                todayTickets = rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return todayTickets;
     }
+
+    public double getMonthRevenue() {
+        double monthRevenue = 0;
+        String query = "SELECT COALESCE(SUM(GiaVe), 0) as total_revenue " +
+                      "FROM VeMayBay " +
+                      "WHERE MONTH(NgayDat) = MONTH(CURRENT_DATE) " +
+                      "AND YEAR(NgayDat) = YEAR(CURRENT_DATE) " + 
+                      "AND TrangThai = 'Đã thanh toán'";
+    
+        try (Connection connection = MYSQLDB.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                monthRevenue = rs.getDouble("total_revenue");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return monthRevenue;
+    }
+    
     public int getFlightCountByMonth(int month) {
         int count = 0;
-        String query = "SELECT COUNT(*) FROM ChuyenBay WHERE MONTH(NgayBay) = ? AND YEAR(NgayBay) = YEAR(CURRENT_DATE)";
-
+        String query = "SELECT COUNT(*) as total FROM ChuyenBay cb " +
+                      "LEFT JOIN VeMayBay v ON cb.MaChuyenBay = v.MaChuyenBay " +
+                      "WHERE MONTH(cb.NgayBay) = ? " +
+                      "AND YEAR(cb.NgayBay) = YEAR(CURRENT_DATE) " +
+                      "AND v.TrangThai IN ('Đã đặt', 'Đã thanh toán')";
+    
         try (Connection connection = MYSQLDB.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, month);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    count = rs.getInt(1);
+                    count = rs.getInt("total");
                 }
             }
         } catch (SQLException e) {
@@ -186,15 +209,22 @@ public class TrangChuService {
 
     public double getRevenueByMonth(int month) {
         double revenue = 0;
-        String query = "SELECT SUM(TongGia) FROM DatVe WHERE MONTH(NgayDat) = ? " +
-                      "AND YEAR(NgayDat) = YEAR(CURRENT_DATE) AND TrangThai = 'Đã thanh toán'";
-
+        String query = "SELECT " +
+                      "COALESCE(SUM(CASE " +
+                      "    WHEN v.TrangThai = 'Đã thanh toán' THEN v.GiaVe " +
+                      "    ELSE 0 " +
+                      "END), 0) as total_revenue " +
+                      "FROM VeMayBay v " +
+                      "JOIN ChuyenBay cb ON v.MaChuyenBay = cb.MaChuyenBay " +
+                      "WHERE MONTH(v.NgayDat) = ? " +
+                      "AND YEAR(v.NgayDat) = YEAR(CURRENT_DATE)";
+    
         try (Connection connection = MYSQLDB.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, month);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    revenue = rs.getDouble(1);
+                    revenue = rs.getDouble("total_revenue");
                 }
             }
         } catch (SQLException e) {
@@ -205,8 +235,8 @@ public class TrangChuService {
 
     public int getTicketCountByClass(String hangVe) {
         int count = 0;
-        String query = "SELECT COUNT(*) FROM VeMayBay WHERE HangVe = ? AND TrangThai = 'Đã thanh toán'";
-
+        String query = "SELECT COUNT(*) FROM VeMayBay WHERE HangVe = ? AND TrangThai IN ('Đã đặt', 'Đã thanh toán')";
+    
         try (Connection connection = MYSQLDB.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, hangVe);
@@ -243,12 +273,17 @@ public class TrangChuService {
 
     // Thêm các phương thức chi tiết hơn
     public Map<String, Integer> getTopDestinations(int limit) {
-        Map<String, Integer> destinations = new HashMap<>();
-        String query = "SELECT DiemDen, COUNT(*) as count FROM ChuyenBay " +
-                      "GROUP BY DiemDen ORDER BY count DESC LIMIT ?";
+        Map<String, Integer> destinations = new LinkedHashMap<>();
+        String query = "SELECT c.DiemDen, COUNT(*) as count " +
+                    "FROM VeMayBay v " +
+                    "JOIN ChuyenBay c ON v.MaChuyenBay = c.MaChuyenBay " +
+                    "WHERE v.TrangThai IN ('Đã đặt', 'Đã thanh toán') " +
+                    "GROUP BY c.DiemDen " +
+                    "ORDER BY count DESC " +
+                    "LIMIT ?";
 
         try (Connection connection = MYSQLDB.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+            PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, limit);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {

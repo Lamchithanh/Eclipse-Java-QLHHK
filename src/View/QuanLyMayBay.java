@@ -402,11 +402,21 @@ public class QuanLyMayBay extends JPanel {
                 mb.getMaMayBay(),
                 mb.getLoaiMayBay(),
                 mb.getSucChua(),
-                mb.getMaHang()
+                mb.getTenHang() + " (" + mb.getMaHang() + ")"  // Hiển thị tên hãng và mã trong ngoặc
             });
         }
         
         clearFields();
+    }
+
+    private String extractMaHang(String selectedItem) {
+        if (selectedItem == null) return "";
+        int start = selectedItem.lastIndexOf("(");
+        int end = selectedItem.lastIndexOf(")");
+        if (start >= 0 && end >= 0) {
+            return selectedItem.substring(start + 1, end);
+        }
+        return selectedItem;
     }
 
     private void performSearch(String searchQuery) {
@@ -434,8 +444,8 @@ public class QuanLyMayBay extends JPanel {
         String maMayBay = getTextOrPlaceholder(maMayBayField);
         String loaiMayBay = getTextOrPlaceholder(loaiMayBayField);
         String sucChua = getTextOrPlaceholder(sucChuaField);
-        String maHang = (String) maHangComboBox.getSelectedItem();
-
+        String maHang = extractMaHang((String) maHangComboBox.getSelectedItem());
+    
         if (controller.addMayBay(maMayBay, loaiMayBay, sucChua, maHang)) {
             showNotification("Thêm máy bay thành công", NotificationType.SUCCESS);
             loadMayBayFromDatabase();
@@ -444,13 +454,13 @@ public class QuanLyMayBay extends JPanel {
             showNotification("Thêm máy bay thất bại", NotificationType.ERROR);
         }
     }
-
+    
     private void updateMayBay() {
         String maMayBay = getTextOrPlaceholder(maMayBayField);
         String loaiMayBay = getTextOrPlaceholder(loaiMayBayField);
         String sucChua = getTextOrPlaceholder(sucChuaField);
-        String maHang = (String) maHangComboBox.getSelectedItem();
-
+        String maHang = extractMaHang((String) maHangComboBox.getSelectedItem());
+    
         if (controller.updateMayBay(maMayBay, loaiMayBay, sucChua, maHang)) {
             showNotification("Cập nhật máy bay thành công", NotificationType.SUCCESS);
             loadMayBayFromDatabase();
@@ -476,14 +486,16 @@ public class QuanLyMayBay extends JPanel {
         maHangComboBox.removeAllItems();
         try (Connection conn = MYSQLDB.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT MaHang FROM HangHangKhong")) {
+             ResultSet rs = stmt.executeQuery("SELECT MaHang, TenHang FROM HangHangKhong")) {
             
             while (rs.next()) {
-                maHangComboBox.addItem(rs.getString("MaHang"));
+                String maHang = rs.getString("MaHang");
+                String tenHang = rs.getString("TenHang");
+                maHangComboBox.addItem(tenHang + " (" + maHang + ")");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            showNotification("Lỗi khi tải danh sách mã hãng", NotificationType.ERROR);
+            showNotification("Lỗi khi tải danh sách hãng", NotificationType.ERROR);
         }
     }
 }

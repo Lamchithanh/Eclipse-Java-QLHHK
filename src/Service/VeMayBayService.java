@@ -244,7 +244,9 @@ public class VeMayBayService {
     // Lấy tất cả vé máy bay
     public List<VeMayBay> getAllVeMayBay() {
         List<VeMayBay> veMayBayList = new ArrayList<>();
+        // Thêm v.SoGhe, v.HangVe vào câu SELECT
         String sql = "SELECT v.MaVe, v.MaChuyenBay, v.MaKhachHang, v.NgayDat, v.GiaVe, v.TrangThai, " +
+                     "v.SoGhe, v.HangVe, " + // Thêm 2 trường này
                      "k.TenKhachHang, k.CMND, k.SoDienThoai, k.DiaChi, k.Email, k.NgaySinh, k.QuocTich " +
                      "FROM VeMayBay v " +
                      "JOIN KhachHang k ON v.MaKhachHang = k.MaKhachHang";
@@ -269,6 +271,10 @@ public class VeMayBayService {
                     rs.getDate("NgaySinh"),
                     rs.getString("QuocTich")
                 );
+    
+                // Vẫn giữ phần set này vì đã thêm các trường vào câu SELECT
+                veMayBay.setSoGhe(rs.getString("SoGhe"));
+                veMayBay.setHangVe(rs.getString("HangVe"));        
                 
                 veMayBayList.add(veMayBay);
             }
@@ -278,11 +284,48 @@ public class VeMayBayService {
         return veMayBayList;
     }
 
+    public List<String> getSeatNumbersByBookingId(String maDatVe) {
+        List<String> seatNumbers = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+    
+        try {
+            conn = MYSQLDB.getConnection();
+            String sql = "SELECT SoGhe FROM VeMayBay WHERE MaVe = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, maDatVe);
+            rs = stmt.executeQuery();
+    
+            while (rs.next()) {
+                String soGhe = rs.getString("SoGhe");
+                if (soGhe != null && !soGhe.isEmpty()) {
+                    seatNumbers.add(soGhe);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Đóng kết nối, statement, và result set
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    
+        return seatNumbers;
+    }
+    
     // Tìm kiếm vé máy bay
     public List<VeMayBay> searchVeMayBay(String searchQuery) {
         List<VeMayBay> filteredList = new ArrayList<>();
+        // Cập nhật câu SQL để lấy đầy đủ thông tin
         String sql = "SELECT v.MaVe, v.MaChuyenBay, v.MaKhachHang, v.NgayDat, v.GiaVe, v.TrangThai, " +
-                     "k.TenKhachHang, k.CMND " +
+                     "v.SoGhe, v.HangVe, " + // Thêm 2 trường này
+                     "k.TenKhachHang, k.CMND, k.SoDienThoai, k.DiaChi, k.Email, k.NgaySinh, k.QuocTich " +
                      "FROM VeMayBay v " +
                      "JOIN KhachHang k ON v.MaKhachHang = k.MaKhachHang " +
                      "WHERE v.MaVe LIKE ? OR " +
@@ -312,12 +355,19 @@ public class VeMayBayService {
                         rs.getString("MaKhachHang"),
                         rs.getDate("NgayDat"),
                         rs.getString("TenKhachHang"),
-                        rs.getString("CMND")
+                        rs.getString("CMND"),
+                        rs.getDouble("GiaVe"),
+                        rs.getString("TrangThai"),
+                        rs.getString("SoDienThoai"),
+                        rs.getString("DiaChi"), 
+                        rs.getString("Email"),
+                        rs.getDate("NgaySinh"),
+                        rs.getString("QuocTich")
                     );
                     
-                    // Bổ sung thêm thông tin
-                    veMayBay.setGiaVe(rs.getDouble("GiaVe"));
-                    veMayBay.setTrangThai(rs.getString("TrangThai"));
+                    // Thêm thông tin số ghế và hạng vé
+                    veMayBay.setSoGhe(rs.getString("SoGhe"));
+                    veMayBay.setHangVe(rs.getString("HangVe"));
                     
                     filteredList.add(veMayBay);
                 }

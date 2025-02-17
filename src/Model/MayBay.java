@@ -5,6 +5,7 @@ public class MayBay {
     private String loaiMayBay;
     private int sucChua;
     private String maHang;
+    private String tenHang;
 
     // Constructor
     public MayBay(String maMayBay, String loaiMayBay, int sucChua, String maHang) {
@@ -15,6 +16,15 @@ public class MayBay {
     }
 
     // Getters and setters
+
+    public String getTenHang() {
+        return tenHang;
+    }
+
+    public void setTenHang(String tenHang) {
+        this.tenHang = tenHang;
+    }
+    
     public String getMaMayBay() {
         return maMayBay;
     }

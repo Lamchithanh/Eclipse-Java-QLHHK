@@ -26,10 +26,10 @@ public class QuanLyChuyenBay extends JPanel {
     private DefaultTableModel tableModel;
     private ChuyenBayController controller;
     private JTextField maChuyenBayField, changBayField, ngayBayField, sanBayField, 
-                       nhaGaField, soGheField, tinhTrangField, searchField, diemDiField, diemDenField, giaVeField;
+                       nhaGaField, soGheField, searchField, diemDiField, diemDenField, giaVeField;
     private JComboBox<String> maMayBayComboBox, maHangComboBox;
     private JTable chuyenBayTable;
-    
+    private JComboBox<String> tinhTrangComboBox;
     private Color primaryColor = new Color(41, 128, 185);
     private Color backgroundColor = new Color(236, 240, 241);
 
@@ -230,7 +230,8 @@ public class QuanLyChuyenBay extends JPanel {
         // Cột phải
         nhaGaField = createModernTextField("Nhập nhà ga...");
         soGheField = createModernTextField("Nhập số ghế...");
-        tinhTrangField = createModernTextField("Nhập tình trạng...");
+        String[] tinhTrangOptions = {"Sắp khởi hành", "Đã khởi hành", "Delay", "Đã hủy"};
+        tinhTrangComboBox = createModernComboBox(tinhTrangOptions);
         searchField = createModernTextField("Tìm kiếm...");
     
         // Initialize ComboBoxes with modern styling
@@ -240,7 +241,7 @@ public class QuanLyChuyenBay extends JPanel {
         // Cột phải
         addColumnInputField(rightColumn, "Nhà Ga", nhaGaField, rightGbc, 6);
         addColumnInputField(rightColumn, "Số Ghế", soGheField, rightGbc, 7);
-        addColumnInputField(rightColumn, "Tình Trạng", tinhTrangField, rightGbc, 8);
+        addColumnInputField(rightColumn, "Tình Trạng", tinhTrangComboBox , rightGbc, 8);
         addColumnInputField(rightColumn, "Mã Máy Bay", maMayBayComboBox, rightGbc, 9);
         addColumnInputField(rightColumn, "Mã Hãng", maHangComboBox, rightGbc, 10);
         addColumnInputField(rightColumn, "Giá Vé", giaVeField, rightGbc, 11);
@@ -340,8 +341,8 @@ public class QuanLyChuyenBay extends JPanel {
             "Nhà Ga", 
             "Số Ghế", 
             "Tình Trạng", 
-            "Mã Máy Bay", 
-            "Mã Hãng", 
+            "Máy Bay", 
+            "Hãng Bay", 
             "Giá Vé"
         };
         tableModel = new DefaultTableModel(columnNames, 0);
@@ -556,7 +557,8 @@ public class QuanLyChuyenBay extends JPanel {
         sanBayField = createStyledTextField();
         nhaGaField = createStyledTextField();
         soGheField = createStyledTextField();
-        tinhTrangField = createStyledTextField();
+        String[] tinhTrangOptions = {"Sắp khởi hành", "Đã khởi hành", "Delay", "Đã hủy"};
+        tinhTrangComboBox = createStyledComboBox(tinhTrangOptions);
     
         // Khởi tạo ComboBox
         maMayBayComboBox = new JComboBox<>(getMaMayBayData());
@@ -630,7 +632,7 @@ public class QuanLyChuyenBay extends JPanel {
         
         gbc.gridx = 1;
         gbc.weightx = 0.7;
-        inputPanel.add(tinhTrangField, gbc);
+        inputPanel.add(tinhTrangComboBox, gbc);
     
         // Mã Máy Bay
         gbc.gridx = 0;
@@ -720,7 +722,7 @@ public class QuanLyChuyenBay extends JPanel {
         sanBayField.setText("");
         nhaGaField.setText("");
         soGheField.setText("");
-        tinhTrangField.setText("");
+        tinhTrangComboBox.setSelectedIndex(0);
         maMayBayComboBox.setSelectedIndex(0);
         maHangComboBox.setSelectedIndex(0);
         searchField.setText("");
@@ -754,8 +756,23 @@ public class QuanLyChuyenBay extends JPanel {
             sanBayField.setText(sanBay);
             nhaGaField.setText(nhaGa);
             soGheField.setText(soGhe);
-            tinhTrangField.setText(tinhTrang);
+            tinhTrangComboBox.setSelectedItem(tinhTrang);
             giaVeField.setText(giaVe);
+
+
+            for (int i = 0; i < maMayBayComboBox.getItemCount(); i++) {
+                if (extractMaMayBay(maMayBayComboBox.getItemAt(i)).equals(maMayBay)) {
+                    maMayBayComboBox.setSelectedIndex(i);
+                    break;
+                }
+            }
+            
+            for (int i = 0; i < maHangComboBox.getItemCount(); i++) {
+                if (extractMaHang(maHangComboBox.getItemAt(i)).equals(maHang)) {
+                    maHangComboBox.setSelectedIndex(i);
+                    break;
+                }
+            }
 
             // Set ComboBox values
             if (Arrays.asList(getMaMayBayData()).contains(maMayBay)) {
@@ -772,10 +789,12 @@ public class QuanLyChuyenBay extends JPanel {
     private String[] getMaMayBayData() {
         List<String> maMayBayList = new ArrayList<>();
         try (Connection conn = MYSQLDB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT DISTINCT MaMayBay FROM MayBay");
+             PreparedStatement stmt = conn.prepareStatement("SELECT MaMayBay, LoaiMayBay FROM MayBay");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                maMayBayList.add(rs.getString("MaMayBay"));
+                String maMayBay = rs.getString("MaMayBay");
+                String loaiMayBay = rs.getString("LoaiMayBay");
+                maMayBayList.add(loaiMayBay + " (" + maMayBay + ")");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -783,18 +802,42 @@ public class QuanLyChuyenBay extends JPanel {
         return maMayBayList.toArray(new String[0]);
     }
     
+    // Khi lấy mã máy bay từ ComboBox để lưu vào DB:
+    private String extractMaMayBay(String selectedItem) {
+        if (selectedItem == null) return "";
+        int start = selectedItem.lastIndexOf("(");
+        int end = selectedItem.lastIndexOf(")");
+        if (start >= 0 && end >= 0) {
+            return selectedItem.substring(start + 1, end);
+        }
+        return selectedItem;
+    }
+    
     private String[] getMaHangData() {
         List<String> maHangList = new ArrayList<>();
         try (Connection conn = MYSQLDB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT DISTINCT MaHang FROM HangHangKhong");
+             PreparedStatement stmt = conn.prepareStatement("SELECT MaHang, TenHang FROM HangHangKhong");
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                maHangList.add(rs.getString("MaHang"));
+                String maHang = rs.getString("MaHang");
+                String tenHang = rs.getString("TenHang"); 
+                maHangList.add(tenHang + " (" + maHang + ")");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return maHangList.toArray(new String[0]);
+    }
+    
+    // Khi lấy mã hãng từ ComboBox để lưu vào DB:
+    private String extractMaHang(String selectedItem) {
+        if (selectedItem == null) return "";
+        int start = selectedItem.lastIndexOf("(");
+        int end = selectedItem.lastIndexOf(")");
+        if (start >= 0 && end >= 0) {
+            return selectedItem.substring(start + 1, end);
+        }
+        return selectedItem;
     }
     
     // Styling methods (can be moved to a utility class if needed)
@@ -805,6 +848,7 @@ public class QuanLyChuyenBay extends JPanel {
         return label;
     }
     
+    // Phương thức tạo TextField đã có
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -813,6 +857,18 @@ public class QuanLyChuyenBay extends JPanel {
                 BorderFactory.createEmptyBorder(5, 8, 5, 8)
         ));
         return textField;
+    }
+
+    // Phương thức mới tạo ComboBox
+    private JComboBox<String> createStyledComboBox(String[] items) {
+        JComboBox<String> comboBox = new JComboBox<>(items);
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        comboBox.setBackground(Color.WHITE);
+        comboBox.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 220), 1, true),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        return comboBox;
     }
     
     private JTable createStyledTable() {
@@ -865,6 +921,9 @@ public class QuanLyChuyenBay extends JPanel {
             tableModel.setRowCount(0);  // Clear existing data
             
             for (ChuyenBay flight : flights) {
+                String tenMayBay = getTenMayBay(flight.getMaMaybay());
+                String tenHang = getTenHang(flight.getMaHang());
+                
                 tableModel.addRow(new Object[] {
                     flight.getMaChuyenBay(),
                     flight.getDiemDi(),
@@ -875,9 +934,9 @@ public class QuanLyChuyenBay extends JPanel {
                     flight.getNhaGa(),
                     flight.getSoGhe(),
                     flight.getTinhTrang(),
-                    flight.getMaMaybay(),
-                    flight.getMaHang(),
-                    String.format("%,.0f", flight.getGiaVe()) // Định dạng giá vé
+                    tenMayBay + " (" + flight.getMaMaybay() + ")", // Hiển thị tên và mã
+                    tenHang + " (" + flight.getMaHang() + ")",     // Hiển thị tên và mã
+                    String.format("%,.0f", flight.getGiaVe())
                 });
             }
             
@@ -894,7 +953,6 @@ public class QuanLyChuyenBay extends JPanel {
     }
 
     private void searchFlight(String searchQuery) {
-        // Nếu searchQuery rỗng thì load lại toàn bộ danh sách
         if (searchQuery.trim().isEmpty()) {
             loadFlightsFromDatabase();
             return;
@@ -902,9 +960,11 @@ public class QuanLyChuyenBay extends JPanel {
     
         List<ChuyenBay> searchResults = controller.searchFlights(searchQuery);
     
-        // Cập nhật bảng với kết quả tìm kiếm
         tableModel.setRowCount(0); 
         for (ChuyenBay flight : searchResults) {
+            String tenMayBay = getTenMayBay(flight.getMaMaybay());
+            String tenHang = getTenHang(flight.getMaHang());
+            
             tableModel.addRow(new Object[] {
                 flight.getMaChuyenBay(),
                 flight.getDiemDi(),
@@ -915,11 +975,39 @@ public class QuanLyChuyenBay extends JPanel {
                 flight.getNhaGa(),
                 flight.getSoGhe(),
                 flight.getTinhTrang(),
-                flight.getMaMaybay(),
-                flight.getMaHang(),
-                String.format("%,.0f", flight.getGiaVe()) // Định dạng giá vé
+                tenMayBay + " (" + flight.getMaMaybay() + ")", // Hiển thị tên và mã
+                tenHang + " (" + flight.getMaHang() + ")",     // Hiển thị tên và mã
+                String.format("%,.0f", flight.getGiaVe())
             });
         }
+    }
+
+    private String getTenMayBay(String maMayBay) {
+        try (Connection conn = MYSQLDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT LoaiMayBay FROM MayBay WHERE MaMayBay = ?")) {
+            stmt.setString(1, maMayBay);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("LoaiMayBay");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return maMayBay; // Trả về mã nếu không tìm thấy tên
+    }
+    
+    private String getTenHang(String maHang) {
+        try (Connection conn = MYSQLDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT TenHang FROM HangHangKhong WHERE MaHang = ?")) {
+            stmt.setString(1, maHang);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("TenHang");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return maHang; // Trả về mã nếu không tìm thấy tên
     }
 
     private void addFlight() {
@@ -929,9 +1017,9 @@ public class QuanLyChuyenBay extends JPanel {
         String sanBay = sanBayField.getText().trim();
         String nhaGa = nhaGaField.getText().trim();
         String soGhe = soGheField.getText().trim();
-        String tinhTrang = tinhTrangField.getText().trim();
-        String maMayBay = (String) maMayBayComboBox.getSelectedItem();
-        String maHang = (String) maHangComboBox.getSelectedItem();
+        String tinhTrang = (String) tinhTrangComboBox.getSelectedItem();
+        String maMayBay = extractMaMayBay((String) maMayBayComboBox.getSelectedItem());
+        String maHang = extractMaHang((String) maHangComboBox.getSelectedItem());
         String diemDi = diemDiField.getText().trim(); 
         String diemDen = diemDenField.getText().trim();
         String giaVe = giaVeField.getText().trim();
@@ -964,9 +1052,9 @@ public class QuanLyChuyenBay extends JPanel {
         String sanBay = sanBayField.getText().trim();
         String nhaGa = nhaGaField.getText().trim();
         String soGhe = soGheField.getText().trim();
-        String tinhTrang = tinhTrangField.getText().trim();
-        String maMayBay = (String) maMayBayComboBox.getSelectedItem();
-        String maHang = (String) maHangComboBox.getSelectedItem();
+        String tinhTrang = (String) tinhTrangComboBox.getSelectedItem();
+        String maMayBay = extractMaMayBay((String) maMayBayComboBox.getSelectedItem());
+        String maHang = extractMaHang((String) maHangComboBox.getSelectedItem());
         String diemDi = diemDiField.getText().trim(); 
         String diemDen = diemDenField.getText().trim();
         String giaVe = giaVeField.getText().trim();

@@ -120,7 +120,7 @@ public class ChuyenBayController {
             ChuyenBay chuyenBay = new ChuyenBay(
                 maChuyenBay, sanBay, changBay, ngayBay, 
                 nhaGa, soGheInt, tinhTrang, maMayBay, maHang,
-                diemDi, diemDen
+                diemDi, diemDen, null // Thêm tham số này
             );
             
             // Set giá vé
@@ -169,7 +169,7 @@ public class ChuyenBayController {
             ChuyenBay chuyenBay = new ChuyenBay(
                 maChuyenBay, sanBay, changBay, ngayBay, 
                 nhaGa, soGheInt, tinhTrang, maMayBay, maHang,
-                diemDi, diemDen
+                diemDi, diemDen, null // Thêm tham số này
             );
             
             // Set giá vé

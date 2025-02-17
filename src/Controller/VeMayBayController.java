@@ -82,7 +82,7 @@ public class VeMayBayController {
     public VeMayBay createVeMayBayFromInput(String maVe, String maChuyenBay, 
     String maKhachHang, String tenKhachHang, String cmnd, String ngayDat, 
     String giaVe, String trangThai, String soDienThoai, String diaChi, 
-    String email, String ngaySinh, String quocTich) throws ParseException {
+    String email, String ngaySinh, String quocTich, String hangVe) throws ParseException {
     
     // Chuyển đổi ngày đặt vé
     java.sql.Date sqlNgayDat = null;
@@ -121,8 +121,14 @@ public class VeMayBayController {
     quocTich = quocTich.equals("Nhập quốc tịch...") ? null : quocTich;
 
     // Tạo và trả về đối tượng VeMayBay với đầy đủ thông tin
-    return new VeMayBay(maVe, maChuyenBay, maKhachHang, sqlNgayDat, 
+    VeMayBay veMayBay = new VeMayBay(maVe, maChuyenBay, maKhachHang, sqlNgayDat, 
         tenKhachHang, cmnd, giaVeDouble, trangThai, soDienThoai, 
         diaChi, email, sqlNgaySinh, quocTich);
-    }
+    
+    // Thêm thông tin hạng vé
+    veMayBay.setHangVe(hangVe);
+    
+    // Số ghế sẽ được tự động cấp khi lưu vào database
+    return veMayBay;
+}
 }

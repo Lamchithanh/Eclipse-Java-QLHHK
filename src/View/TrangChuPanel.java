@@ -14,6 +14,7 @@ import Components.PieChart;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -77,9 +78,15 @@ public class TrangChuPanel extends JPanel {
 
     private void loadBackgroundImage() {
         try {
-            backgroundImage = new ImageIcon(getClass().getResource("/src/image/airplane1.jpg")).getImage();
+            URL imageUrl = getClass().getResource("/src/image/airplane1.jpg");
+            if (imageUrl != null) {
+                backgroundImage = new ImageIcon(imageUrl).getImage();
+            } else {
+                System.err.println("Không tìm thấy ảnh nền");
+                backgroundImage = null;
+            }
         } catch (Exception e) {
-            System.err.println("Error loading background image: " + e.getMessage());
+            System.err.println("Lỗi load ảnh nền: " + e.getMessage());
             backgroundImage = null;
         }
     }
@@ -228,15 +235,15 @@ private void drawSidebarPattern(Graphics2D g2d) {
         
         String[][] menuItems = {
             {"Trang Chủ", "dashboard", "TrangChuPanel"},
+            {"Thống Kê", "stats", "ThongKePanel"},
             {"Đặt vé", "booking", "datVePanel"},
+            {"Khách Hàng", "ticket", "VeMayBayPanel"},
             {"Chuyến Bay", "flight", "ChuyenBayPanel"},
-            {"Sân Bay", "airport", "SanBayPanel"},
-            {"Vé Máy Bay", "ticket", "VeMayBayPanel"},
             {"Lịch Bay", "schedule", "LichBayPanel"},
+            {"Sân Bay", "airport", "SanBayPanel"},
             {"Hãng Hàng Không", "airline", "HangHangKhongPanel"},
             {"Nhân Viên", "staff", "NhanVienPanel"},
-            {"Máy Bay", "plane", "MayBayPanel"},
-            {"Thống Kê", "stats", "ThongKePanel"}
+            {"Máy Bay", "plane", "MayBayPanel"}           
         };
         
         for (String[] item : menuItems) {
@@ -510,9 +517,10 @@ private void drawSidebarPattern(Graphics2D g2d) {
             String.valueOf(trangChuService.getTodayTicketsSold()),
             "Tổng: " + trangChuService.layTongVeDaBan(), SUCCESS);
             
-        addEnhancedStatCard(statsPanel, "Doanh Thu Hôm Nay", 
-            currencyFormatter.format(trangChuService.getTodayRevenue() / 1000000) + "M",
-            "Tổng: " + currencyFormatter.format(trangChuService.getTodayRevenue() / 1000000) + "M", WARNING);
+        // Thay đổi từ "Doanh Thu Hôm Nay" thành "Doanh Thu Tháng Này"
+        addEnhancedStatCard(statsPanel, "Doanh Thu Tháng Này", 
+            currencyFormatter.format(trangChuService.getMonthRevenue() / 1000000) + "M",
+            "Tổng: " + currencyFormatter.format(trangChuService.getMonthRevenue() / 1000000) + "M", WARNING);
             
         addEnhancedStatCard(statsPanel, "Khách Hàng", 
             String.valueOf(trangChuService.getTotalCustomers()),
@@ -621,12 +629,17 @@ private void drawSidebarPattern(Graphics2D g2d) {
         flightChart.setTitleX("Tháng");
         flightChart.setTitleY("Số chuyến bay");
         
+        // Lấy tháng hiện tại 
+        int currentMonth = java.time.LocalDate.now().getMonthValue();
+        
         int[] flightValues = new int[monthCount];
         for (int i = 0; i < monthCount; i++) {
             try {
-                flightValues[i] = trangChuService.getFlightCountByMonth(i + 1);
+                int monthToGet = ((currentMonth - monthCount + 1 + i) + 12) % 12;
+                if (monthToGet == 0) monthToGet = 12;
+                flightValues[i] = trangChuService.getFlightCountByMonth(monthToGet);
             } catch (Exception e) {
-                flightValues[i] = 0; // Giá trị mặc định nếu có lỗi
+                flightValues[i] = 0;
             }
         }
         
@@ -636,17 +649,22 @@ private void drawSidebarPattern(Graphics2D g2d) {
         
         return flightChart;
     }
-
+    
     private LineChart createRevenueChart(String[] months, int monthCount) {
         LineChart revenueChart = new LineChart();
         revenueChart.setTitle("Doanh thu theo tháng");
         
+        // Lấy tháng hiện tại
+        int currentMonth = java.time.LocalDate.now().getMonthValue();
+        
         double[] revenueValues = new double[monthCount];
         for (int i = 0; i < monthCount; i++) {
             try {
-                revenueValues[i] = trangChuService.getRevenueByMonth(i + 1) / 1000000.0; // Chuyển về đơn vị triệu
+                int monthToGet = ((currentMonth - monthCount + 1 + i) + 12) % 12;
+                if (monthToGet == 0) monthToGet = 12;
+                revenueValues[i] = trangChuService.getRevenueByMonth(monthToGet) / 1000000.0;
             } catch (Exception e) {
-                revenueValues[i] = 0.0; // Giá trị mặc định nếu có lỗi
+                revenueValues[i] = 0.0;
             }
         }
         
@@ -664,13 +682,21 @@ private void drawSidebarPattern(Graphics2D g2d) {
         
         String[] ticketClasses = {"Phổ thông", "Thương gia", "Hạng nhất"};
         int[] ticketValues = new int[ticketClasses.length];
+        int totalTickets = 0;
         
+        // Lấy số lượng vé cho từng hạng
         for (int i = 0; i < ticketClasses.length; i++) {
             try {
                 ticketValues[i] = trangChuService.getTicketCountByClass(ticketClasses[i]);
+                totalTickets += ticketValues[i];
             } catch (Exception e) {
-                ticketValues[i] = 0; // Giá trị mặc định nếu có lỗi
+                ticketValues[i] = 0;
             }
+        }
+        
+        // Kiểm tra nếu không có dữ liệu
+        if (totalTickets == 0) {
+            ticketValues = new int[]{0, 0, 0};
         }
         
         ticketClassChart.setValues(ticketValues);
@@ -933,12 +959,77 @@ private void drawSidebarPattern(Graphics2D g2d) {
     }
 
     private void startDataRefreshTimer() {
-        Timer timer = new Timer(60000, e -> {
-            SwingUtilities.invokeLater(this::updateDashboardData);
+        Timer timer = new Timer(3000000, e -> { // Cập nhật mỗi 30P
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    // Cập nhật dữ liệu từ DB
+                    trangChuService.capNhatDuLieu(); 
+                    
+                    // Cập nhật các thông số nhanh
+                    for (Map.Entry<String, JLabel> entry : statLabels.entrySet()) {
+                        String key = entry.getKey();
+                        JLabel label = entry.getValue();
+                        
+                        try {
+                            switch (key) {
+                                case "Chuyến Bay Hôm Nay":
+                                    String flightText = label.getText();
+                                    if (!flightText.isEmpty()) {
+                                        animateValue(label, 
+                                            Integer.parseInt(flightText), 
+                                            trangChuService.getTodayFlightsCount(), 
+                                            ANIMATION_DURATION);
+                                    }
+                                    break;
+                                case "Vé Đã Bán Hôm Nay":
+                                    String ticketText = label.getText();
+                                    if (!ticketText.isEmpty()) {
+                                        animateValue(label, 
+                                            Integer.parseInt(ticketText), 
+                                            trangChuService.getTodayTicketsSold(), 
+                                            ANIMATION_DURATION);
+                                    }
+                                    break;
+                                case "Doanh Thu Tháng Này":  
+                                    String revenueText = label.getText().replace("đM", "").trim();
+                                    if (!revenueText.isEmpty()) {
+                                        double currentRevenue = Double.parseDouble(revenueText);
+                                        animateValue(label, 
+                                            (int)currentRevenue, 
+                                            (int)(trangChuService.getMonthRevenue() / 1000000), 
+                                            ANIMATION_DURATION);
+                                    }
+                                    break;
+                                case "Khách Hàng":
+                                    String customerText = label.getText();
+                                    if (!customerText.isEmpty()) {
+                                        animateValue(label, 
+                                            Integer.parseInt(customerText), 
+                                            trangChuService.getTotalCustomers(), 
+                                            ANIMATION_DURATION);
+                                    }
+                                    break;
+                            }
+                        } catch (NumberFormatException ex) {
+                            System.err.println("Lỗi khi parse số từ label " + key + ": " + ex.getMessage());
+                        }
+                    }
+                    
+                    // Cập nhật biểu đồ
+                    updateCharts();
+                    
+                    // Cập nhật lại toàn bộ dashboard
+                    showEnhancedDashboard();
+                    
+                } catch (Exception ex) {
+                    System.err.println("Lỗi khi cập nhật dữ liệu: " + ex.getMessage());
+                }
+            });
         });
         timer.start();
     }
 
+    @SuppressWarnings("unused")
     private void updateDashboardData() {
         for (Map.Entry<String, JLabel> entry : statLabels.entrySet()) {
             String key = entry.getKey();
@@ -1065,8 +1156,20 @@ private void drawSidebarPattern(Graphics2D g2d) {
         );
         
         if (response == JOptionPane.YES_OPTION) {
-            parentFrame.dispose();
-            new DangNhapDialog(null, true).setVisible(true);
+            // Đóng frame hiện tại
+            Window window = SwingUtilities.getWindowAncestor(this);
+            window.dispose();
+            
+            // Mở form đăng nhập mới
+            SwingUtilities.invokeLater(() -> {
+                LoginPanel loginPanel = new LoginPanel(userAccountService, parentFrame);
+                JFrame frame = new JFrame("Đăng nhập");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.add(loginPanel);
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+            });
         }
     }
 
@@ -1161,6 +1264,7 @@ private void drawSidebarPattern(Graphics2D g2d) {
         }
     }
 
+    @SuppressWarnings("unused")
     private class DangNhapDialog extends JDialog {
         public DangNhapDialog(Frame parent, boolean modal) {
             super(parent, modal);
@@ -1174,5 +1278,80 @@ private void drawSidebarPattern(Graphics2D g2d) {
             setResizable(false);
             // Additional login dialog implementation...
         }
+    }
+
+    public void updateCharts() {
+        // Cập nhật biểu đồ phân bố vé
+        PieChart ticketClassChart = createTicketClassChart();
+        
+        // Cập nhật biểu đồ điểm đến
+        PieChart destinationChart = createDestinationChart();
+        
+        // Cập nhật giao diện
+        SwingUtilities.invokeLater(() -> {
+            // Tìm và thay thế biểu đồ cũ bằng biểu đồ mới
+            for (Component comp : contentArea.getComponents()) {
+                if (comp instanceof JPanel) {
+                    JPanel panel = (JPanel) comp;
+                    // Cập nhật các biểu đồ trong panel
+                    updateChartsInPanel(panel, ticketClassChart, destinationChart);
+                }
+            }
+            contentArea.revalidate();
+            contentArea.repaint();
+        });
+    }
+
+    private void updateChartsInPanel(JPanel panel, PieChart ticketClassChart, PieChart destinationChart) {
+        // Duyệt qua tất cả các component trong panel
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JScrollPane) {
+                // Nếu là ScrollPane, kiểm tra viewport
+                JScrollPane scrollPane = (JScrollPane) comp;
+                Component viewComp = scrollPane.getViewport().getView();
+                if (viewComp instanceof JPanel) {
+                    // Tìm panel chứa biểu đồ
+                    JPanel chartsPanel = (JPanel) viewComp;
+                    for (Component chartComp : chartsPanel.getComponents()) {
+                        if (chartComp instanceof JPanel) {
+                            JPanel chartWrapper = (JPanel) chartComp;
+                            // Tìm và thay thế biểu đồ cũ
+                            updateChartInWrapper(chartWrapper, ticketClassChart, destinationChart);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updateChartInWrapper(JPanel wrapper, PieChart ticketClassChart, PieChart destinationChart) {
+        // Lấy tiêu đề của wrapper
+        String title = "";
+        for (Component comp : wrapper.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel headerPanel = (JPanel) comp;
+                for (Component headerComp : headerPanel.getComponents()) {
+                    if (headerComp instanceof JLabel) {
+                        JLabel label = (JLabel) headerComp;
+                        title = label.getText();
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    
+        // Thay thế biểu đồ dựa trên tiêu đề
+        if (title.contains("Phân bố vé")) {
+            // Xóa biểu đồ cũ và thêm biểu đồ mới
+            wrapper.removeAll();
+            wrapper.add(ticketClassChart, BorderLayout.CENTER);
+        } else if (title.contains("Điểm đến phổ biến")) {
+            wrapper.removeAll();
+            wrapper.add(destinationChart, BorderLayout.CENTER);
+        }
+        
+        wrapper.revalidate();
+        wrapper.repaint();
     }
 }

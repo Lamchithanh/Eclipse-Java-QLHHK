@@ -35,6 +35,9 @@ public class DatVe {
     private String diemDen;
     private Date ngayBay;
     private String hangVe;
+    private String soGhe;
+
+
     
     // Special requests
     private boolean suatAnDacBiet;
@@ -206,6 +209,14 @@ public class DatVe {
     public void setNgayBay(Date ngayBay) {
         this.ngayBay = ngayBay;
     }
+
+    public String getSoGhe() {
+        return soGhe;
+    }
+    
+    public void setSoGhe(String soGhe) {
+        this.soGhe = soGhe;
+    }    
 
     public String getHangVe() {
         return hangVe;
@@ -394,5 +405,12 @@ public class DatVe {
             System.err.println("Error generating MaKhachHang: " + e.getMessage());
             throw new RuntimeException("Unable to generate MaKhachHang", e);
         }
-    }   
+    }
+
+    public String getViTriGhe() {
+        if (danhSachVe != null && !danhSachVe.isEmpty()) {
+            return danhSachVe.get(0).getSoGhe();
+        }
+        return null;  // Trả về null thay vì giá trị mặc định
+    }
 }

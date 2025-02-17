@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -64,7 +65,6 @@ public class QuanLyDatVeView extends JPanel {
 	// Customer Information
 	private JTextField txtHoTen;
 	private JTextField txtCMND;
-	private JDateChooser dateNgaySinh;
 	private JComboBox<String> cbGioiTinh;
 	private JTextField txtQuocTich;
 	private JTextField txtSoDienThoai;
@@ -125,8 +125,16 @@ public class QuanLyDatVeView extends JPanel {
 	private void initializeComponents() {
 		// Initialize Search Components
 		txtSearch = createStyledTextField("Tìm kiếm...");
-		dateSearch = new JDateChooser();
-		cbFilterStatus = new JComboBox<>(new String[] { "Tất cả", "Sắp khởi hành", "Đã khởi hành", "Đã hủy" });
+		txtNgaySinh = createStyledTextField("dd/MM/yyyy");
+		txtNgaySinh.setToolTipText("Nhập ngày sinh (dd/MM/yyyy)");
+	
+		// Cải thiện cbFilterStatus
+		cbFilterStatus = new JComboBox<>(new String[] { 
+			"Tất cả", 
+			"Đã đặt", 
+			"Đã thanh toán", 
+			"Đã hủy" 
+		});
 
 		// Initialize Flight Information Components
 		cbChuyenBay = new JComboBox<>();
@@ -173,7 +181,6 @@ public class QuanLyDatVeView extends JPanel {
 		});
 		
 		
-		dateNgaySinh = new JDateChooser();
 		txtNgaySinh = createStyledTextField("dd/MM/yyyy");
 		txtNgaySinh.setToolTipText("Nhập ngày sinh (dd/MM/yyyy)");
 		cbGioiTinh = new JComboBox<>(new String[] { "Nam", "Nữ" });
@@ -514,7 +521,6 @@ public class QuanLyDatVeView extends JPanel {
 		// Xóa thông tin khách hàng
 		txtHoTen.setText("");
 		txtCMND.setText("");
-		dateNgaySinh.setDate(null);
 		cbGioiTinh.setSelectedIndex(0);
 		txtQuocTich.setText("");
 
@@ -592,18 +598,16 @@ public class QuanLyDatVeView extends JPanel {
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
 		panel.setBackground(Color.WHITE);
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+	
 		panel.add(new JLabel("Tìm kiếm:"));
 		panel.add(txtSearch);
-		panel.add(new JLabel("Ngày:"));
-		panel.add(dateSearch);
 		panel.add(new JLabel("Trạng thái:"));
 		panel.add(cbFilterStatus);
-
+	
 		JButton btnSearch = new JButton("Tìm kiếm");
 		btnSearch.addActionListener(e -> performSearch());
 		panel.add(btnSearch);
-
+	
 		return panel;
 	}
 
@@ -653,37 +657,23 @@ public class QuanLyDatVeView extends JPanel {
 
 
 	private JPanel createCustomerInfoPanel() {
-	    JPanel panel = new JPanel(new GridBagLayout());
-	    panel.setBackground(Color.WHITE);
-	    GridBagConstraints gbc = createStandardGBC();
-
-	    addFormField(panel, "Họ và tên:", txtHoTen, gbc, 0);
-	    addFormField(panel, "CMND/CCCD:", txtCMND, gbc, 1);
-	    
-	    // Tạo panel để chứa cả JDateChooser và TextField
-	    JPanel ngaySinhPanel = new JPanel(new GridBagLayout());
-	    ngaySinhPanel.setBackground(Color.WHITE);
-	    
-	    GridBagConstraints ngaySinhGbc = new GridBagConstraints();
-	    ngaySinhGbc.fill = GridBagConstraints.HORIZONTAL;
-	    ngaySinhGbc.weightx = 0.7; // Ưu tiên cho JDateChooser
-	    ngaySinhGbc.gridx = 0;
-	    ngaySinhGbc.gridy = 0;
-	    ngaySinhPanel.add(dateNgaySinh, ngaySinhGbc);
-	    
-	    ngaySinhGbc.weightx = 0.3; // Phần nhỏ hơn cho TextField
-	    ngaySinhGbc.gridx = 1;
-	    ngaySinhGbc.insets = new Insets(0, 5, 0, 0); // Thêm khoảng cách giữa 2 components
-	    ngaySinhPanel.add(txtNgaySinh, ngaySinhGbc);
-	    
-	    addFormField(panel, "Ngày sinh:", ngaySinhPanel, gbc, 2);
-	    addFormField(panel, "Giới tính:", cbGioiTinh, gbc, 3);
-	    addFormField(panel, "Quốc tịch:", txtQuocTich, gbc, 4);
-	    addFormField(panel, "Số điện thoại:", txtSoDienThoai, gbc, 5);
-	    addFormField(panel, "Email:", txtEmail, gbc, 6);
-	    addFormField(panel, "Địa chỉ:", new JScrollPane(txtDiaChi), gbc, 7);
-
-	    return panel;
+		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setBackground(Color.WHITE);
+		GridBagConstraints gbc = createStandardGBC();
+	
+		addFormField(panel, "Họ và tên:", txtHoTen, gbc, 0);
+		addFormField(panel, "CMND/CCCD:", txtCMND, gbc, 1);
+		
+		// Loại bỏ dateNgaySinh, chỉ để lại txtNgaySinh
+		addFormField(panel, "Ngày sinh:", txtNgaySinh, gbc, 2);
+		
+		addFormField(panel, "Giới tính:", cbGioiTinh, gbc, 3);
+		addFormField(panel, "Quốc tịch:", txtQuocTich, gbc, 4);
+		addFormField(panel, "Số điện thoại:", txtSoDienThoai, gbc, 5);
+		addFormField(panel, "Email:", txtEmail, gbc, 6);
+		addFormField(panel, "Địa chỉ:", new JScrollPane(txtDiaChi), gbc, 7);
+	
+		return panel;
 	}
 
 	private void addSection(JPanel container, JPanel section, String title, GridBagConstraints gbc, int gridy) {
@@ -805,9 +795,7 @@ public class QuanLyDatVeView extends JPanel {
 								if (khachHang != null) {
 									// Chỉ cập nhật thông tin nếu tìm thấy khách hàng
 									txtHoTen.setText(khachHang.getTenKhachHang());
-									if (khachHang.getNgaySinh() != null) {
-										dateNgaySinh.setDate(khachHang.getNgaySinh());
-									}
+									
 									txtQuocTich.setText((String) khachHang.getQuocTich(khachHang.getQuocTich()));
 									txtSoDienThoai.setText(khachHang.getSoDienThoai());
 									txtEmail.setText(khachHang.getEmail());
@@ -826,7 +814,7 @@ public class QuanLyDatVeView extends JPanel {
 			private void updateCustomerFields(KhachHang khachHang) {
 				if (khachHang != null) {
 					txtHoTen.setText(khachHang.getTenKhachHang());
-					dateNgaySinh.setDate(khachHang.getNgaySinh());
+				
 					txtQuocTich.setText((String) khachHang.getQuocTich(khachHang.getQuocTich()));
 					txtSoDienThoai.setText(khachHang.getSoDienThoai());
 					txtEmail.setText(khachHang.getEmail());
@@ -916,10 +904,7 @@ public class QuanLyDatVeView extends JPanel {
 				txtEmail.setText("");
 				txtDiaChi.setText("");
 
-				// Xử lý JDateChooser an toàn
-				if (dateNgaySinh != null) {
-					dateNgaySinh.setDate(null);
-				}
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -994,10 +979,24 @@ public class QuanLyDatVeView extends JPanel {
 	private void performSearch() {
 		try {
 			String searchTerm = txtSearch.getText().trim();
-			Date searchDate = dateSearch.getDate() != null ? new Date(dateSearch.getDate().getTime()) : null;
 			String status = cbFilterStatus.getSelectedItem().toString();
 
-			List<DatVe> searchResults = service.searchDatVe(searchTerm);
+			// Nếu chọn "Tất cả" thì không lọc theo trạng thái
+			List<DatVe> searchResults;
+			if (status.equals("Tất cả")) {
+				searchResults = service.searchDatVe(searchTerm);
+			} else {
+				// Lọc theo trạng thái
+				searchResults = service.getAllDatVe().stream()
+					.filter(booking -> 
+						booking.getTrangThai().equals(status) && 
+						(searchTerm.isEmpty() || 
+						booking.getMaDatVe().toLowerCase().contains(searchTerm.toLowerCase()) ||
+						booking.getHoTen().toLowerCase().contains(searchTerm.toLowerCase()) ||
+						booking.getCMND().toLowerCase().contains(searchTerm.toLowerCase())))
+					.collect(Collectors.toList());
+			}
+
 			updateTable(searchResults);
 		} catch (Exception e) {
 			showMessage("Lỗi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -1060,23 +1059,22 @@ public class QuanLyDatVeView extends JPanel {
 		}
 
 		// Kiểm tra ngày sinh
-		 if (dateNgaySinh.getDate() == null && txtNgaySinh.getText().trim().isEmpty()) {
-		        showMessage("Vui lòng nhập hoặc chọn ngày sinh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-		        return false;
-		    }
+		if (txtNgaySinh.getText().trim().isEmpty() || txtNgaySinh.getText().equals("dd/MM/yyyy")) {
+			showMessage("Vui lòng nhập ngày sinh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+	
 		 
 		// Kiểm tra định dạng ngày sinh nếu nhập text
-		    if (!txtNgaySinh.getText().trim().isEmpty()) {
-		        try {
-		            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		            sdf.setLenient(false); // Chặt chẽ hơn trong việc kiểm tra ngày
-		            sdf.parse(txtNgaySinh.getText().trim());
-		        } catch (ParseException e) {
-		            showMessage("Định dạng ngày sinh không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy", 
-		                        "Lỗi", JOptionPane.ERROR_MESSAGE);
-		            return false;
-		        }
-		    }
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+			sdf.setLenient(false);
+			sdf.parse(txtNgaySinh.getText().trim());
+		} catch (ParseException e) {
+			showMessage("Định dạng ngày sinh không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy", 
+						"Lỗi", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
 
 		// Kiểm tra số điện thoại
 		String sdt = txtSoDienThoai.getText();
@@ -1115,37 +1113,33 @@ public class QuanLyDatVeView extends JPanel {
 	    
 	    // Thông tin ngày sinh
 	    Date ngaySinh = null;
-	    if (dateNgaySinh.getDate() != null) {
-	        ngaySinh = new Date(dateNgaySinh.getDate().getTime());
-	    } else {
-	        String ngaySinhText = txtNgaySinh.getText().trim();
-	        if (!ngaySinhText.isEmpty() && !ngaySinhText.equals("dd/MM/yyyy")) {
-	            try {
-	                SimpleDateFormat[] formats = {
-	                    new SimpleDateFormat("dd/MM/yyyy"),
-	                    new SimpleDateFormat("dd-MM-yyyy"),
-	                    new SimpleDateFormat("yyyy-MM-dd")
-	                };
-	                
-	                for (SimpleDateFormat format : formats) {
-	                    try {
-	                        java.util.Date parsedDate = format.parse(ngaySinhText);
-	                        ngaySinh = new Date(parsedDate.getTime());
-	                        break;
-	                    } catch (ParseException e) {
-	                        continue;
-	                    }
-	                }
-	                
-	                if (ngaySinh == null) {
-	                    throw new ParseException("Không thể parse ngày sinh", 0);
-	                }
-	            } catch (Exception e) {
-	                throw new Exception("Định dạng ngày sinh không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy");
-	            }
-	        }
-	    }
-	    booking.setNgaySinh(ngaySinh);
+		String ngaySinhText = txtNgaySinh.getText().trim();
+		if (!ngaySinhText.isEmpty() && !ngaySinhText.equals("dd/MM/yyyy")) {
+			try {
+				SimpleDateFormat[] formats = {
+					new SimpleDateFormat("dd/MM/yyyy"),
+					new SimpleDateFormat("dd-MM-yyyy"),
+					new SimpleDateFormat("yyyy-MM-dd")
+				};
+				
+				for (SimpleDateFormat format : formats) {
+					try {
+						java.util.Date parsedDate = format.parse(ngaySinhText);
+						ngaySinh = new Date(parsedDate.getTime());
+						break;
+					} catch (ParseException e) {
+						continue;
+					}
+				}
+				
+				if (ngaySinh == null) {
+					throw new ParseException("Không thể parse ngày sinh", 0);
+				}
+			} catch (Exception e) {
+				throw new Exception("Định dạng ngày sinh không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy");
+			}
+		}
+		booking.setNgaySinh(ngaySinh);
 
 	    // Nếu là đặt vé mới, tạo mã đặt vé mới
 	    if (txtMaDatVe.getText().trim().isEmpty()) {
@@ -1201,7 +1195,11 @@ public class QuanLyDatVeView extends JPanel {
 	    booking.setSDTNguoiLienHe(txtSDTNguoiLienHe.getText().trim());
 
 	    // Đặt trạng thái mặc định
-	    booking.setTrangThai("Đã đặt");
+		if (chkXacNhanThanhToan.isSelected()) {
+			booking.setTrangThai("Đã thanh toán");
+		} else {
+			booking.setTrangThai("Đã đặt");
+		}
 
 	    return booking;
 	}
@@ -1249,23 +1247,24 @@ public class QuanLyDatVeView extends JPanel {
 	}
 
 	private void updateTable(List<DatVe> bookings) {
-	    SwingUtilities.invokeLater(() -> {
-	        tableModel.setRowCount(0);
-	        for (DatVe booking : bookings) {
-	            // Format giá trị tiền thành String trước khi thêm vào table
-	            String formattedPrice = String.format("%,.0f VND", booking.getTongGia());
-	            
-	            tableModel.addRow(new Object[]{
-	                booking.getMaDatVe(),
-	                booking.getChuyenBay().getMaChuyenBay(),
-	                booking.getHoTen(),
-	                booking.getNgayDat(),
-	                booking.getSoLuong(),
-	                formattedPrice,  // Đã format sẵn thành String
-	                booking.getTrangThai()
-	            });
-	        }
-	    });
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				tableModel.setRowCount(0);
+				for (DatVe booking : bookings) {
+					String formattedPrice = String.format("%,.0f VND", booking.getTongGia());
+					
+					tableModel.addRow(new Object[]{
+						booking.getMaDatVe(),
+						booking.getChuyenBay().getMaChuyenBay(),
+						booking.getHoTen(),
+						booking.getNgayDat(),
+						booking.getSoLuong(),
+						formattedPrice,
+						booking.getTrangThai() // Truy xuất trực tiếp getTrangThai()
+					});
+				}
+			}
+		});
 	}
 
 	public void showMessage(String message, String title, int messageType) {
@@ -1280,11 +1279,18 @@ public class QuanLyDatVeView extends JPanel {
 
 	public void loadBookingData(DatVe booking) {
 		if (booking != null) {
+
+			if (booking.getNgaySinh() != null) {
+				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+				txtNgaySinh.setText(sdf.format(booking.getNgaySinh()));
+			} else {
+				txtNgaySinh.setText("dd/MM/yyyy");
+			}
+
 			txtMaDatVe.setText(booking.getMaDatVe());
 			cbChuyenBay.setSelectedItem(booking.getChuyenBay());
 			txtHoTen.setText(booking.getHoTen());
 			txtCMND.setText(booking.getCMND());
-			dateNgaySinh.setDate(booking.getNgaySinh());
 			cbGioiTinh.setSelectedItem(booking.getGioiTinh());
 			txtQuocTich.setText(booking.getQuocTich());
 			txtSoDienThoai.setText(booking.getSoDienThoai());
@@ -1354,10 +1360,6 @@ public class QuanLyDatVeView extends JPanel {
 		return txtCMND.getText().trim();
 	}
 
-	@SuppressWarnings("exports")
-    public Date getNgaySinhDate() {
-		return dateNgaySinh.getDate() != null ? new Date(dateNgaySinh.getDate().getTime()) : null;
-	}
 
 	public String getGioiTinhText() {
 		return (String) cbGioiTinh.getSelectedItem();
@@ -1424,8 +1426,9 @@ public class QuanLyDatVeView extends JPanel {
 			return false;
 		}
 
-		if (dateNgaySinh.getDate() == null) {
-			showMessage("Vui lòng chọn ngày sinh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+		// Kiểm tra ngày sinh từ txtNgaySinh
+		if (txtNgaySinh.getText().trim().isEmpty() || txtNgaySinh.getText().equals("dd/MM/yyyy")) {
+			showMessage("Vui lòng nhập ngày sinh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 

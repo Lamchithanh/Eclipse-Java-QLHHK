@@ -12,7 +12,11 @@ import java.util.logging.Logger;
 public class ChuyenBayService {
 
 	private static final Logger LOGGER = Logger.getLogger(ChuyenBayService.class.getName());
-
+	@SuppressWarnings("unused")
+	private static final int PARAM_MA_CHUYEN_BAY = 1;
+	@SuppressWarnings("unused")
+	private static final int PARAM_SAN_BAY = 2;
+	
 	// Lấy danh sách chuyến bay
 	public List<ChuyenBay> getAllChuyenBays() {
 	    List<ChuyenBay> danhSachChuyenBay = new ArrayList<>();
@@ -39,18 +43,19 @@ public class ChuyenBayService {
 
 	        while (rs.next()) {
 	            ChuyenBay chuyenBay = new ChuyenBay(
-	                rs.getString("MaChuyenBay"),
-	                rs.getString("MaSanBay"),
-	                rs.getString("ChangBay"),
-	                rs.getString("NgayBay"),
-	                rs.getString("NhaGa"),
-	                rs.getInt("SoGhe"),
-	                rs.getString("TinhTrang"),
-	                rs.getString("MaMayBay"),
-	                rs.getString("MaHang"),
-	                rs.getString("DiemDi"),
-	                rs.getString("DiemDen")
-	            );
+					rs.getString("MaChuyenBay"),
+					rs.getString("MaSanBay"),
+					rs.getString("ChangBay"),
+					rs.getString("NgayBay"),
+					rs.getString("NhaGa"),
+					rs.getInt("SoGhe"),
+					rs.getString("TinhTrang"),
+					rs.getString("MaMayBay"),
+					rs.getString("MaHang"),
+					rs.getString("DiemDi"),
+					rs.getString("DiemDen"),
+					rs.getString("TenSanBay") // Thêm tham số này
+				);
 	            chuyenBay.setGiaVe(rs.getDouble("GiaVe"));
 
 	            // Thêm thông tin từ LichBay
@@ -104,18 +109,19 @@ public class ChuyenBayService {
 
 	        if (rs.next()) {
 	            ChuyenBay chuyenBay = new ChuyenBay(
-	                rs.getString("MaChuyenBay"),
-	                rs.getString("MaSanBay"),
-	                rs.getString("ChangBay"),
-	                rs.getString("NgayBay"),
-	                rs.getString("NhaGa"),
-	                rs.getInt("SoGhe"),
-	                rs.getString("TinhTrang"),
-	                rs.getString("MaMayBay"),
-	                rs.getString("MaHang"),
-	                rs.getString("DiemDi"),
-	                rs.getString("DiemDen")
-	            );
+					rs.getString("MaChuyenBay"),
+					rs.getString("MaSanBay"),
+					rs.getString("ChangBay"),
+					rs.getString("NgayBay"),
+					rs.getString("NhaGa"),
+					rs.getInt("SoGhe"),
+					rs.getString("TinhTrang"),
+					rs.getString("MaMayBay"),
+					rs.getString("MaHang"),
+					rs.getString("DiemDi"),
+					rs.getString("DiemDen"),
+					null // Hoặc giá trị phù hợp nếu cần
+				);
 	            chuyenBay.setGiaVe(rs.getDouble("GiaVe"));
 	            
 	            // Thêm thông tin từ LichBay
@@ -257,7 +263,7 @@ public class ChuyenBayService {
 			stmt.setString(1, chuyenBay.getMaChuyenBay());
 			stmt.setString(2, chuyenBay.getSanBay());
 			stmt.setString(3, chuyenBay.getChangBay());
-			stmt.setDate(3, chuyenBay.getNgayBay());
+			stmt.setDate(4, chuyenBay.getNgayBay());
 			stmt.setString(5, chuyenBay.getNhaGa());
 			stmt.setInt(6, chuyenBay.getSoGhe());
 			stmt.setString(7, chuyenBay.getTinhTrang());
@@ -415,7 +421,8 @@ public class ChuyenBayService {
 					rs.getString("MaMayBay"),
 					rs.getString("MaHang"),
 					rs.getString("DiemDi"),
-					rs.getString("DiemDen")
+					rs.getString("DiemDen"),
+					null // Hoặc giá trị phù hợp nếu cần
 				);
 				chuyenBay.setGiaVe(rs.getDouble("GiaVe")); // Thêm giá vé
 				danhSachKetQua.add(chuyenBay);

@@ -18,6 +18,76 @@ public class DatVeService {
 	private ChuyenBayService chuyenBayService = new ChuyenBayService();
 	private PreparedStatement stmtVeMayBay;
 
+	private boolean isSeatTaken(Connection connection, String maChuyenBay, String soGhe) throws SQLException {
+		String sql = "SELECT COUNT(*) FROM VeMayBay WHERE MaChuyenBay = ? AND SoGhe = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+			stmt.setString(1, maChuyenBay);
+			stmt.setString(2, soGhe);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1) > 0;
+			}
+		}
+		return false;
+	}
+
+	private String findNextAvailableSeat(Connection connection, String maChuyenBay, String hangVe) throws SQLException {
+		String prefix = "A"; // Phổ thông
+		if (hangVe.equals("Thương gia")) {
+			prefix = "B";
+		} else if (hangVe.equals("Hạng nhất")) {
+			prefix = "C";
+		}
+		
+		// Lấy số ghế lớn nhất hiện tại
+		String sql = "SELECT SoGhe FROM VeMayBay WHERE MaChuyenBay = ? AND SoGhe LIKE ? ORDER BY SoGhe DESC LIMIT 1";
+		try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+			stmt.setString(1, maChuyenBay);
+			stmt.setString(2, prefix + "%");
+			ResultSet rs = stmt.executeQuery();
+			
+			int seatNumber = 1;
+			if (rs.next()) {
+				String lastSeat = rs.getString("SoGhe");
+				seatNumber = Integer.parseInt(lastSeat.substring(1)) + 1;
+			}
+			
+			// Tìm ghế trống tiếp theo
+			String newSeat;
+			do {
+				newSeat = String.format("%s%02d", prefix, seatNumber);
+				if (!isSeatTaken(connection, maChuyenBay, newSeat)) {
+					return newSeat;
+				}
+				seatNumber++;
+			} while (seatNumber <= 99); // Giới hạn số ghế
+			
+			throw new SQLException("Không còn ghế trống cho hạng vé " + hangVe);
+		}
+	}
+
+	private void insertVeMayBay(Connection connection, DatVe datVe) throws SQLException {
+		String sqlVeMayBay = "INSERT INTO VeMayBay (MaVe, MaChuyenBay, MaKhachHang, NgayDat, "
+				+ "GiaVe, HangVe, SoGhe, TrangThai, XacNhanThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+		try (PreparedStatement stmtVeMayBay = connection.prepareStatement(sqlVeMayBay)) {
+			// Tìm ghế trống
+			String soGhe = findNextAvailableSeat(connection, datVe.getChuyenBay().getMaChuyenBay(), datVe.getHangVe());
+			
+			int paramIndex = 1;
+			stmtVeMayBay.setString(paramIndex++, datVe.getMaDatVe());
+			stmtVeMayBay.setString(paramIndex++, datVe.getChuyenBay().getMaChuyenBay());
+			stmtVeMayBay.setString(paramIndex++, datVe.getMaKhachHang());
+			stmtVeMayBay.setTimestamp(paramIndex++, Timestamp.valueOf(LocalDateTime.now()));
+			stmtVeMayBay.setDouble(paramIndex++, datVe.getTongGia());
+			stmtVeMayBay.setString(paramIndex++, datVe.getHangVe());
+			stmtVeMayBay.setString(paramIndex++, soGhe); // Sử dụng ghế tự động phân bổ
+			stmtVeMayBay.setString(paramIndex++, "Đã đặt");
+			stmtVeMayBay.setBoolean(paramIndex++, datVe.isXacNhanThanhToan());
+			stmtVeMayBay.executeUpdate();
+		}
+	}
+	
 	// Thêm phương thức kiểm tra VeMayBay tồn tại
 	private boolean isVeMayBayExists(Connection connection, String maVe) throws SQLException {
 		String sql = "SELECT COUNT(*) FROM VeMayBay WHERE MaVe = ?";
@@ -70,7 +140,7 @@ public class DatVeService {
 			stmt.setString(paramIndex++, datVe.getHangVe());
 			stmt.setInt(paramIndex++, datVe.getSoLuong());
 			stmt.setDouble(paramIndex++, datVe.getTongGia());
-			stmt.setString(paramIndex++, "Đã đặt");
+			stmt.setString(paramIndex++, datVe.isXacNhanThanhToan() ? "Đã thanh toán" : "Đã đặt");
 			stmt.setString(paramIndex++, datVe.getPhuongThucThanhToan());
 			stmt.setString(paramIndex++, datVe.getMaGiamGia());
 			stmt.setBoolean(paramIndex++, datVe.isXacNhanThanhToan());
@@ -89,7 +159,7 @@ public class DatVeService {
 				stmtVeMayBay.setTimestamp(paramIndex++, Timestamp.valueOf(LocalDateTime.now()));
 				stmtVeMayBay.setDouble(paramIndex++, datVe.getTongGia());
 				stmtVeMayBay.setString(paramIndex++, datVe.getHangVe());
-				stmtVeMayBay.setString(paramIndex++, "Đã đặt");
+				stmtVeMayBay.setString(paramIndex++, datVe.isXacNhanThanhToan() ? "Đã thanh toán" : "Đã đặt");
 				stmtVeMayBay.setBoolean(paramIndex++, datVe.isXacNhanThanhToan());
 				stmtVeMayBay.executeUpdate();
 			}
@@ -274,7 +344,7 @@ public class DatVeService {
 			stmtDatVe.setString(index++, datVe.getTrangThai());
 			stmtDatVe.setString(index++, datVe.getPhuongThucThanhToan());
 			stmtDatVe.setString(index++, datVe.getMaGiamGia());
-			stmtDatVe.setBoolean(index++, datVe.isXacNhanThanhToan());
+			stmtDatVe.setString(index++, datVe.isXacNhanThanhToan() ? "Đã thanh toán" : "Đã đặt");
 			stmtDatVe.setTimestamp(index++, Timestamp.valueOf(LocalDateTime.now()));
 			stmtDatVe.setString(index++, datVe.getMaDatVe());
 
@@ -301,7 +371,7 @@ public class DatVeService {
 			stmtVeMayBay.setDouble(3, datVe.getTongGia());
 			stmtVeMayBay.setString(4, datVe.getHangVe());
 			stmtVeMayBay.setString(5, datVe.getTrangThai());
-			stmtVeMayBay.setBoolean(6, datVe.isXacNhanThanhToan());
+			stmtVeMayBay.setString(6, datVe.isXacNhanThanhToan() ? "Đã thanh toán" : "Đã đặt");
 			stmtVeMayBay.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
 			stmtVeMayBay.setString(8, datVe.getMaDatVe());
 			stmtVeMayBay.executeUpdate();
@@ -445,31 +515,41 @@ public class DatVeService {
 		Connection connection = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
-
+	
 		try {
 			connection = MYSQLDB.getConnection();
-			String sql = "SELECT d.*, k.*, y.* " + "FROM DatVe d "
-					+ "LEFT JOIN KhachHang k ON d.MaKhachHang = k.MaKhachHang "
-					+ "LEFT JOIN YeuCauDacBiet y ON d.MaDatVe = y.MaVe "
-					+ "WHERE d.MaDatVe LIKE ? OR k.TenKhachHang LIKE ? OR k.CMND LIKE ? "
-					+ "OR k.SoDienThoai LIKE ? OR d.TrangThai LIKE ? " + "ORDER BY d.NgayDat DESC";
-
+			// Cập nhật câu query để lấy đầy đủ thông tin từ tất cả các bảng liên quan
+			String sql = "SELECT d.*, k.*, y.*, c.*, " +
+						"k.TenKhachHang, k.CMND, k.GioiTinh, k.NgaySinh, " +
+						"k.SoDienThoai, k.Email, k.DiaChi, k.QuocTich, " +
+						"k.TenNguoiLienHe, k.SoDienThoaiNguoiLienHe, " +
+						"y.SuatAnDacBiet, y.HoTroYTe, y.ChoNgoiUuTien, y.HanhLyDacBiet, " +
+						"c.DiemDi, c.DiemDen, c.ChangBay, c.NgayBay as NgayKhoiHanh, " +
+						"c.NhaGa, c.GiaVe, c.TinhTrang as TinhTrangChuyenBay " +
+						"FROM DatVe d " +
+						"LEFT JOIN KhachHang k ON d.MaKhachHang = k.MaKhachHang " +
+						"LEFT JOIN YeuCauDacBiet y ON d.MaDatVe = y.MaVe " +
+						"LEFT JOIN ChuyenBay c ON d.MaChuyenBay = c.MaChuyenBay " +
+						"WHERE d.MaDatVe LIKE ? OR k.TenKhachHang LIKE ? OR k.CMND LIKE ? " +
+						"OR k.SoDienThoai LIKE ? OR d.TrangThai LIKE ? " +
+						"ORDER BY d.NgayDat DESC";
+	
 			stmt = connection.prepareStatement(sql);
 			String searchPattern = "%" + searchQuery + "%";
 			for (int i = 1; i <= 5; i++) {
 				stmt.setString(i, searchPattern);
 			}
-
+	
 			rs = stmt.executeQuery();
-
+	
 			while (rs.next()) {
-				DatVe datVe = mapResultSetToDatVe(rs);
+				DatVe datVe = mapResultSetToDatVe(rs); // Sử dụng phương thức map đã có
 				datVeList.add(datVe);
 			}
 		} finally {
 			closeResources(connection, stmt, rs);
 		}
-
+	
 		return datVeList;
 	}
 

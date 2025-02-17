@@ -13,7 +13,13 @@ public class MayBayService {
         Connection connection = MYSQLDB.getConnection();
         
         if (connection != null) {
-            String sql = "SELECT MaMayBay, LoaiMayBay, SucChua, MaHang FROM MayBay";
+            // Cập nhật câu SQL để JOIN với bảng HangHangKhong
+            String sql = """
+                SELECT mb.MaMayBay, mb.LoaiMayBay, mb.SucChua, mb.MaHang, 
+                       h.TenHang
+                FROM MayBay mb
+                LEFT JOIN HangHangKhong h ON mb.MaHang = h.MaHang
+            """;
             
             try (Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
@@ -25,6 +31,7 @@ public class MayBayService {
                         rs.getInt("SucChua"),
                         rs.getString("MaHang")
                     );
+                    mayBay.setTenHang(rs.getString("TenHang")); // Thêm tên hãng
                     mayBays.add(mayBay);
                 }
             } catch (SQLException e) {

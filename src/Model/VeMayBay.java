@@ -11,7 +11,9 @@ public class VeMayBay {
     private String cmnd;
     private double giaVe;
     private String trangThai;
-    
+    private String soGhe;        // Thêm trường số ghế
+    private String hangVe;
+
     // Thêm các trường thông tin khách hàng
     private String soDienThoai;
     private String diaChi;
@@ -25,7 +27,8 @@ public class VeMayBay {
                     Date ngayDat, String tenKhachHang, String cmnd, 
                     double giaVe, String trangThai,
                     String soDienThoai, String diaChi, String email, 
-                    Date ngaySinh, String quocTich) {
+                    Date ngaySinh, String quocTich,
+                    String soGhe, String hangVe) {  // Thêm 2 tham số mới
         this.maVe = maVe;
         this.maChuyenBay = maChuyenBay;
         this.maKhachHang = maKhachHang;
@@ -39,14 +42,29 @@ public class VeMayBay {
         this.email = email;
         this.ngaySinh = ngaySinh;
         this.quocTich = quocTich;
+        this.soGhe = soGhe;
+        this.hangVe = hangVe;
+    }
+
+    // Constructor với thông tin cơ bản
+    // Constructor đầy đủ với thông tin vé và khách hàng
+    @SuppressWarnings("exports")
+    public VeMayBay(String maVe, String maChuyenBay, String maKhachHang, 
+                    Date ngayDat, String tenKhachHang, String cmnd, 
+                    double giaVe, String trangThai,
+                    String soDienThoai, String diaChi, String email, 
+                    Date ngaySinh, String quocTich) {
+        this(maVe, maChuyenBay, maKhachHang, ngayDat, tenKhachHang, cmnd,
+            giaVe, trangThai, soDienThoai, diaChi, email, ngaySinh, quocTich,
+            null, null); // Thêm soGhe và hangVe là null
     }
 
     // Constructor với thông tin cơ bản
     @SuppressWarnings("exports")
     public VeMayBay(String maVe, String maChuyenBay, String maKhachHang, 
                     Date ngayDat, String tenKhachHang, String cmnd) {
-        this(maVe, maChuyenBay, maKhachHang, ngayDat, tenKhachHang, cmnd, 
-             0.0, "Đã đặt", null, null, null, null, null);
+        this(maVe, maChuyenBay, maKhachHang, ngayDat, tenKhachHang, cmnd,
+            0.0, "Đã đặt", null, null, null, null, null, null, null);
     }
 
     // Constructor với thông tin vé đầy đủ
@@ -55,12 +73,25 @@ public class VeMayBay {
                     Date ngayDat, String tenKhachHang, String cmnd,
                     double giaVe, String trangThai) {
         this(maVe, maChuyenBay, maKhachHang, ngayDat, tenKhachHang, cmnd,
-             giaVe, trangThai, null, null, null, null, null);
+            giaVe, trangThai, null, null, null, null, null, null, null);
     }
 
-    // public VeMayBay() {
-    //     //TODO Auto-generated constructor stub
-    // }
+    public String getSoGhe() {
+        return soGhe;
+    }
+
+    public void setSoGhe(String soGhe) {
+        this.soGhe = soGhe;
+    }
+
+    // Thêm getter và setter cho hạng vé
+    public String getHangVe() {
+        return hangVe;
+    }
+
+    public void setHangVe(String hangVe) {
+        this.hangVe = hangVe;
+    }
 
     // Getter và setter cho các trường thông tin vé
     public String getMaVe() { return maVe; }
@@ -123,6 +154,17 @@ public class VeMayBay {
                ", email='" + email + '\'' +
                ", ngaySinh=" + ngaySinh +
                ", quocTich='" + quocTich + '\'' +
+               ", soGhe='" + soGhe + '\'' +    // Thêm số ghế
+               ", hangVe='" + hangVe + '\'' +  // Thêm hạng vé
                '}';
+    }
+
+    public boolean isValidSeatNumber() {
+        if (soGhe == null || soGhe.trim().isEmpty()) {
+            return false;
+        }
+
+        // Kiểm tra định dạng: [A-C][0-9]{2}
+        return soGhe.matches("^[A-C]\\d{2}$");
     }
 }

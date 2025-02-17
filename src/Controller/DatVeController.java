@@ -188,7 +188,7 @@ public class DatVeController {
         
         booking.setHoTen(view.getHoTenText());
         booking.setCMND(view.getCMNDText());
-        booking.setNgaySinh(view.getNgaySinhDate());
+
         booking.setGioiTinh(view.getGioiTinhText());
         booking.setQuocTich(view.getQuocTichText());
         
