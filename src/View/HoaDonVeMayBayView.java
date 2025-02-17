@@ -566,7 +566,7 @@ public class HoaDonVeMayBayView extends JDialog {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Lưu Vé PDF");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setSelectedFile(new File("AirlineTicket_" + datVe.getMaDatVe() + ".pdf"));
+        fileChooser.setSelectedFile(new File("NTN_AIRLINES_" + datVe.getMaDatVe() + ".pdf"));
         
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             String filePath = fileChooser.getSelectedFile().getAbsolutePath();
