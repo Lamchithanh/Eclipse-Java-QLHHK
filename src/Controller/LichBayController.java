@@ -20,6 +20,15 @@ public class LichBayController {
         this.service = new LichBayService();
     }
 
+      // Thêm phương thức getAllFlights
+      public List<LichBay> getAllFlights() {
+        return service.getAllLichBay();
+    }
+
+    public List<String> getAllFlightCodes() {
+        return service.getAllMaChuyenBay();
+    }
+
     public void addFlight(LichBay flight) {
         if (service.isDepartureOrArrivalTimeConflict(flight.getMaChuyenBay(), 
             flight.getGioKhoiHanh(), flight.getGioHaCanh())) {

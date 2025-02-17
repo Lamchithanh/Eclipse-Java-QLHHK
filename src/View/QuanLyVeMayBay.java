@@ -301,16 +301,16 @@ public class QuanLyVeMayBay extends JPanel {
             searchPanel.add(searchField);
     
             // Action Buttons
-            JButton addButton = createModernButton("Thêm", new Color(46, 204, 113));
+            // JButton addButton = createModernButton("Thêm", new Color(46, 204, 113));
             JButton updateButton = createModernButton("Cập Nhật", new Color(52, 152, 219));
             JButton deleteButton = createModernButton("Xóa", new Color(231, 76, 60));
     
-            addButton.addActionListener(e -> handleAddTicket());
+            // addButton.addActionListener(e -> handleAddTicket());
             updateButton.addActionListener(e -> handleUpdateTicket());
             deleteButton.addActionListener(e -> handleDeleteTicket());
     
             actionPanel.add(searchPanel);
-            actionPanel.add(addButton);
+            // actionPanel.add(addButton);
             actionPanel.add(updateButton);
             actionPanel.add(deleteButton);
     

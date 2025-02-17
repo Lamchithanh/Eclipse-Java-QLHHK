@@ -19,6 +19,7 @@ public class QuanLyLichBay extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private JTextField flightCodeField;
+    private JComboBox<String> flightCodeComboBox;
     private JTextField departureTimeField;
     private JTextField arrivalTimeField;
     private JTextField flightDurationField;
@@ -117,6 +118,14 @@ public class QuanLyLichBay extends JPanel {
         return headerPanel;
     }
 
+    private void updateFlightCodeComboBox() {
+        List<String> flightCodes = controller.getAllFlightCodes();
+        flightCodeComboBox.removeAllItems();
+        for (String code : flightCodes) {
+            flightCodeComboBox.addItem(code);
+        }
+    }
+
     private JPanel createModernInputPanel() {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBackground(Color.WHITE);
@@ -124,28 +133,30 @@ public class QuanLyLichBay extends JPanel {
             BorderFactory.createEmptyBorder(15, 15, 15, 15),
             BorderFactory.createLineBorder(new Color(224, 224, 224), 1, true)
         ));
-
+    
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Create fields
-        flightCodeField = createModernTextField("Nhập mã chuyến bay...");
+    
+        // Tạo JComboBox cho mã chuyến bay
+        flightCodeComboBox = new JComboBox<>();
+        flightCodeComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        flightCodeComboBox.setPreferredSize(new Dimension(200, 35));
+        updateFlightCodeComboBox(); // Cập nhật danh sách mã chuyến bay
+    
+        // Tạo các trường nhập liệu khác
         departureTimeField = createModernTextField("HH:mm");
         arrivalTimeField = createModernTextField("HH:mm");
-        flightDurationField = createModernTextField("Nhập thời gian bay...");
-
-       // Make duration field read-only
         flightDurationField = createModernTextField("Thời gian bay (tự động tính)");
         flightDurationField.setEditable(false);
         flightDurationField.setBackground(new Color(245, 245, 245));
-
-        // Add fields
-        addModernInputField(inputPanel, "Mã Chuyến Bay", flightCodeField, gbc, 0);
+    
+        // Thêm các trường vào panel
+        addModernInputField(inputPanel, "Mã Chuyến Bay", flightCodeComboBox, gbc, 0);
         addModernInputField(inputPanel, "Giờ Khởi Hành (HH:mm)", departureTimeField, gbc, 1);
         addModernInputField(inputPanel, "Giờ Hạ Cánh (HH:mm)", arrivalTimeField, gbc, 2);
         addModernInputField(inputPanel, "Thời Gian Bay", flightDurationField, gbc, 3);
-
+    
         return inputPanel;
     }
 
@@ -321,16 +332,16 @@ public class QuanLyLichBay extends JPanel {
         return button;
     }
 
-    private void addModernInputField(JPanel panel, String labelText, JTextField field, GridBagConstraints gbc, int row) {
+    private void addModernInputField(JPanel panel, String labelText, JComponent field, GridBagConstraints gbc, int row) {
         JLabel label = new JLabel(labelText);
         label.setFont(new Font("Segoe UI", Font.BOLD, 14));
         label.setForeground(new Color(70, 70, 70));
-
+    
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.3;
         panel.add(label, gbc);
-
+    
         gbc.gridx = 1;
         gbc.weightx = 0.7;
         panel.add(field, gbc);
@@ -338,8 +349,14 @@ public class QuanLyLichBay extends JPanel {
 
     // Event Handlers
     private void handleAddFlight() {
+        String selectedFlightCode = (String) flightCodeComboBox.getSelectedItem();
+        if (selectedFlightCode == null || selectedFlightCode.trim().isEmpty()) {
+            showNotification("Vui lòng chọn mã chuyến bay", NotificationType.ERROR);
+            return;
+        }
+    
         LichBay flight = controller.createFlightFromInput(
-            getTextOrPlaceholder(flightCodeField),
+            selectedFlightCode,
             getTextOrPlaceholder(departureTimeField),
             getTextOrPlaceholder(arrivalTimeField),
             getTextOrPlaceholder(flightDurationField)
@@ -347,12 +364,19 @@ public class QuanLyLichBay extends JPanel {
         
         if (flight != null) {
             controller.addFlight(flight);
+            updateFlightCodeComboBox(); // Cập nhật lại danh sách sau khi thêm
         }
     }
 
     private void handleUpdateFlight() {
+        String selectedFlightCode = (String) flightCodeComboBox.getSelectedItem();
+        if (selectedFlightCode == null || selectedFlightCode.trim().isEmpty()) {
+            showNotification("Vui lòng chọn mã chuyến bay", NotificationType.ERROR);
+            return;
+        }
+    
         LichBay flight = controller.createFlightFromInput(
-            getTextOrPlaceholder(flightCodeField),
+            selectedFlightCode,
             getTextOrPlaceholder(departureTimeField),
             getTextOrPlaceholder(arrivalTimeField),
             getTextOrPlaceholder(flightDurationField)
@@ -360,6 +384,7 @@ public class QuanLyLichBay extends JPanel {
         
         if (flight != null) {
             controller.updateFlight(flight);
+            updateFlightCodeComboBox(); // Cập nhật lại danh sách sau khi cập nhật
         }
     }
 
@@ -382,10 +407,10 @@ public class QuanLyLichBay extends JPanel {
     }
 
     public void updateFieldsFromSelection(int selectedRow) {
-        flightCodeField.setText(tableModel.getValueAt(selectedRow, 0).toString());
+        String flightCode = tableModel.getValueAt(selectedRow, 0).toString();
+        flightCodeComboBox.setSelectedItem(flightCode);
         departureTimeField.setText(tableModel.getValueAt(selectedRow, 1).toString());
         arrivalTimeField.setText(tableModel.getValueAt(selectedRow, 2).toString());
-        // Duration will be automatically calculated
         updateDuration();
     }
 
@@ -402,15 +427,17 @@ public class QuanLyLichBay extends JPanel {
     }
 
     public void clearFields() {
-        flightCodeField.setText((String) flightCodeField.getClientProperty("placeholder"));
+        flightCodeComboBox.setSelectedIndex(-1);
         departureTimeField.setText((String) departureTimeField.getClientProperty("placeholder"));
         arrivalTimeField.setText((String) arrivalTimeField.getClientProperty("placeholder"));
         flightDurationField.setText((String) flightDurationField.getClientProperty("placeholder"));
         searchField.setText((String) searchField.getClientProperty("placeholder"));
-
+    
         // Reset text colors
-        for (JTextField field : new JTextField[]{flightCodeField, departureTimeField, 
-                                               arrivalTimeField, flightDurationField, searchField}) {
+        for (JTextField field : new JTextField[]{departureTimeField, 
+                                               arrivalTimeField, 
+                                               flightDurationField, 
+                                               searchField}) {
             field.setForeground(Color.GRAY);
         }
     }

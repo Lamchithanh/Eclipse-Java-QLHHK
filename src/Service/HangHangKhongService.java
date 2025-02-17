@@ -36,6 +36,74 @@ public class HangHangKhongService {
         return hangList;
     }
 
+    public boolean isHangInfoDuplicated(HangHangKhong hang, String excludeMaHang) {
+        Connection connection = MYSQLDB.getConnection();
+        
+        if (connection != null) {
+            String sql = "SELECT COUNT(*) FROM HangHangKhong WHERE " +
+                        "(TenHang = ? OR SoDienThoai = ? OR Email = ?) " +
+                        (excludeMaHang != null ? "AND MaHang != ?" : "");
+                        
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, hang.getTenHang());
+                pstmt.setString(2, hang.getSoDienThoai());
+                pstmt.setString(3, hang.getEmail());
+                if (excludeMaHang != null) {
+                    pstmt.setString(4, excludeMaHang);
+                }
+                
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                MYSQLDB.closeConnection(connection);
+            }
+        }
+        return false;
+    }
+    
+    // Thêm phương thức để lấy thông tin chi tiết về trùng lặp
+    public String getDuplicateInfo(HangHangKhong hang, String excludeMaHang) {
+        Connection connection = MYSQLDB.getConnection();
+        StringBuilder duplicateInfo = new StringBuilder();
+        
+        if (connection != null) {
+            String sql = "SELECT * FROM HangHangKhong WHERE " +
+                        "(TenHang = ? OR SoDienThoai = ? OR Email = ?) " +
+                        (excludeMaHang != null ? "AND MaHang != ?" : "");
+                        
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, hang.getTenHang());
+                pstmt.setString(2, hang.getSoDienThoai());
+                pstmt.setString(3, hang.getEmail());
+                if (excludeMaHang != null) {
+                    pstmt.setString(4, excludeMaHang);
+                }
+                
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    if (rs.getString("TenHang").equals(hang.getTenHang())) {
+                        duplicateInfo.append("Tên hãng đã tồn tại\n");
+                    }
+                    if (rs.getString("SoDienThoai").equals(hang.getSoDienThoai())) {
+                        duplicateInfo.append("Số điện thoại đã được sử dụng\n");
+                    }
+                    if (rs.getString("Email").equals(hang.getEmail())) {
+                        duplicateInfo.append("Email đã được sử dụng\n");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                MYSQLDB.closeConnection(connection);
+            }
+        }
+        return duplicateInfo.toString();
+    }
+
  // In HangHangKhongService.java
     public boolean addHangHangKhong(HangHangKhong hang) {
         Connection connection = MYSQLDB.getConnection();

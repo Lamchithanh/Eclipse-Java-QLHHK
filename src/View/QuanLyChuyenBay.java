@@ -27,7 +27,7 @@ public class QuanLyChuyenBay extends JPanel {
     private ChuyenBayController controller;
     private JTextField maChuyenBayField, changBayField, ngayBayField, sanBayField, 
                        nhaGaField, soGheField, searchField, diemDiField, diemDenField, giaVeField;
-    private JComboBox<String> maMayBayComboBox, maHangComboBox;
+    private JComboBox<String> maMayBayComboBox, maHangComboBox, sanBayComboBox;
     private JTable chuyenBayTable;
     private JComboBox<String> tinhTrangComboBox;
     private Color primaryColor = new Color(41, 128, 185);
@@ -212,8 +212,8 @@ public class QuanLyChuyenBay extends JPanel {
         maChuyenBayField = createModernTextField("Nhập mã chuyến bay...");
         changBayField = createLockedTextField("Chặng bay tự động");
         ngayBayField = createModernTextField("YYYY-MM-DD");
-        sanBayField = createModernTextField("Nhập sân bay...");
-    
+        sanBayComboBox = createModernComboBox(getSanBayData());
+        
         // Thêm trường điểm đi và điểm đến
         diemDiField = createModernTextField("Nhập điểm đi...");
         diemDenField = createModernTextField("Nhập điểm đến...");
@@ -225,7 +225,7 @@ public class QuanLyChuyenBay extends JPanel {
         addColumnInputField(leftColumn, "Điểm Đến", diemDenField, leftGbc, 2);
         addColumnInputField(leftColumn, "Chặng Bay", changBayField, leftGbc, 3);
         addColumnInputField(leftColumn, "Ngày Bay", ngayBayField, leftGbc, 4);
-        addColumnInputField(leftColumn, "Sân Bay", sanBayField, leftGbc, 5);
+        addColumnInputField(leftColumn, "Sân Bay", sanBayComboBox, leftGbc, 5);
     
         // Cột phải
         nhaGaField = createModernTextField("Nhập nhà ga...");
@@ -719,7 +719,7 @@ public class QuanLyChuyenBay extends JPanel {
         maChuyenBayField.setText("");
         changBayField.setText("");
         ngayBayField.setText("");
-        sanBayField.setText("");
+        sanBayComboBox.setSelectedIndex(-1);
         nhaGaField.setText("");
         soGheField.setText("");
         tinhTrangComboBox.setSelectedIndex(0);
@@ -753,7 +753,13 @@ public class QuanLyChuyenBay extends JPanel {
             diemDenField.setText(diemDen);
             changBayField.setText(changBay);
             ngayBayField.setText(ngayBay);
-            sanBayField.setText(sanBay);
+            String sanBayInfo = tableModel.getValueAt(selectedRow, 5).toString();
+            for (int i = 0; i < sanBayComboBox.getItemCount(); i++) {
+                if (sanBayComboBox.getItemAt(i).contains(extractMaSanBay(sanBayInfo))) {
+                    sanBayComboBox.setSelectedIndex(i);
+                    break;
+                }
+            }
             nhaGaField.setText(nhaGa);
             soGheField.setText(soGhe);
             tinhTrangComboBox.setSelectedItem(tinhTrang);
@@ -930,7 +936,7 @@ public class QuanLyChuyenBay extends JPanel {
                     flight.getDiemDen(),
                     flight.getChangBay(),
                     flight.getNgayBay(),
-                    flight.getSanBay(),
+                    flight.getTenSanBay(),
                     flight.getNhaGa(),
                     flight.getSoGhe(),
                     flight.getTinhTrang(),
@@ -1014,7 +1020,8 @@ public class QuanLyChuyenBay extends JPanel {
         // Lấy dữ liệu từ các trường nhập
         String maChuyenBay = maChuyenBayField.getText().trim();
         String ngayBay = ngayBayField.getText().trim();
-        String sanBay = sanBayField.getText().trim();
+        String selectedSanBay = (String) sanBayComboBox.getSelectedItem();
+        String maSanBay = extractMaSanBay(selectedSanBay);
         String nhaGa = nhaGaField.getText().trim();
         String soGhe = soGheField.getText().trim();
         String tinhTrang = (String) tinhTrangComboBox.getSelectedItem();
@@ -1023,16 +1030,17 @@ public class QuanLyChuyenBay extends JPanel {
         String diemDi = diemDiField.getText().trim(); 
         String diemDen = diemDenField.getText().trim();
         String giaVe = giaVeField.getText().trim();
+       
         
         String changBay = diemDi + " - " + diemDen;
         changBayField.setText(changBay);
     
         // Kiểm tra tính hợp lệ của dữ liệu
-        if (!controller.validateFlightInput(maChuyenBay, changBay, ngayBay, sanBay, soGhe, maMayBay, maHang, diemDi, diemDen)) {
+        if (!controller.validateFlightInput(maChuyenBay, changBay, ngayBay, maSanBay, soGhe, maMayBay, maHang, diemDi, diemDen)) {
             return;
         }
     
-        if (controller.addFlight(maChuyenBay, changBay, ngayBay, sanBay, nhaGa, soGhe, tinhTrang, maMayBay, maHang, diemDi, diemDen, giaVe)) {
+        if (controller.addFlight(maChuyenBay, changBay, ngayBay, maSanBay, nhaGa, soGhe, tinhTrang, maMayBay, maHang, diemDi, diemDen, giaVe)) {
             showNotification("Thêm chuyến bay thành công", NotificationType.SUCCESS);
         } else {
             showNotification("Thêm chuyến bay thất bại", NotificationType.ERROR);
@@ -1049,7 +1057,8 @@ public class QuanLyChuyenBay extends JPanel {
         // Lấy dữ liệu từ các trường nhập
         String maChuyenBay = maChuyenBayField.getText().trim();
         String ngayBay = ngayBayField.getText().trim();
-        String sanBay = sanBayField.getText().trim();
+        String selectedSanBay = (String) sanBayComboBox.getSelectedItem();
+        String maSanBay = extractMaSanBay(selectedSanBay);
         String nhaGa = nhaGaField.getText().trim();
         String soGhe = soGheField.getText().trim();
         String tinhTrang = (String) tinhTrangComboBox.getSelectedItem();
@@ -1072,11 +1081,11 @@ public class QuanLyChuyenBay extends JPanel {
         }
     
         // Kiểm tra tính hợp lệ của dữ liệu
-        if (!controller.validateFlightInput(maChuyenBay, changBay, ngayBay, sanBay, soGhe, maMayBay, maHang, diemDi, diemDen)) {
+        if (!controller.validateFlightInput(maChuyenBay, changBay, ngayBay, maSanBay, soGhe, maMayBay, maHang, diemDi, diemDen)) {
             return;
         }
     
-        if (controller.updateFlight(maChuyenBay, changBay, ngayBay, sanBay, nhaGa, soGhe, tinhTrang, maMayBay, maHang, diemDi, diemDen, giaVe)) {
+        if (controller.updateFlight(maChuyenBay, changBay, ngayBay, maSanBay, nhaGa, soGhe, tinhTrang, maMayBay, maHang, diemDi, diemDen, giaVe)) {
             showNotification("Cập nhật chuyến bay thành công", NotificationType.SUCCESS);
         } else {
             showNotification("Cập nhật chuyến bay thất bại", NotificationType.ERROR);
@@ -1106,4 +1115,32 @@ public class QuanLyChuyenBay extends JPanel {
        // Xóa các trường nhập liệu
        clearFields();
    }
+
+    // Thêm phương thức này vào class QuanLyChuyenBay
+    private String[] getSanBayData() {
+        List<String> sanBayList = new ArrayList<>();
+        try (Connection conn = MYSQLDB.getConnection();
+            PreparedStatement stmt = conn.prepareStatement("SELECT MaSanBay, TenSanBay FROM SanBay");
+            ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String maSanBay = rs.getString("MaSanBay");
+                String tenSanBay = rs.getString("TenSanBay"); 
+                sanBayList.add(tenSanBay + " (" + maSanBay + ")");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sanBayList.toArray(new String[0]);
+    }
+
+    // Thêm phương thức để lấy mã sân bay từ chuỗi đã chọn
+    private String extractMaSanBay(String selectedItem) {
+        if (selectedItem == null) return "";
+        int start = selectedItem.lastIndexOf("(");
+        int end = selectedItem.lastIndexOf(")");
+        if (start >= 0 && end >= 0) {
+            return selectedItem.substring(start + 1, end);
+        }
+        return selectedItem;
+    }
 }

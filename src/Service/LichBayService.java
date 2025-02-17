@@ -37,6 +37,29 @@ public class LichBayService {
         
         return lichBayList;
     }
+
+        // Trong LichBayService.java thêm phương thức mới:
+    public List<String> getAllMaChuyenBay() {
+        List<String> maChuyenBayList = new ArrayList<>();
+        Connection connection = MYSQLDB.getConnection();
+        
+        if (connection != null) {
+            String sql = "SELECT MaChuyenBay FROM ChuyenBay";
+            try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+                
+                while (rs.next()) {
+                    maChuyenBayList.add(rs.getString("MaChuyenBay"));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                MYSQLDB.closeConnection(connection);
+            }
+        }
+        
+        return maChuyenBayList;
+    }
     
     public boolean isFlightCodeExists(String flightCode) {
         // Kiểm tra mã chuyến bay trong cơ sở dữ liệu

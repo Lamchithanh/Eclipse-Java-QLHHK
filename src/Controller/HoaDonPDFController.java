@@ -47,6 +47,7 @@ public class HoaDonPDFController {
 	private static final Font BOLD_FONT = LABEL_FONT;
 	private static final Font NORMAL_FONT = new Font(baseFont, 9, Font.NORMAL, TEXT_COLOR);
 	private static final Font ITALIC_FONT = new Font(baseFont, 8, Font.ITALIC, SECONDARY_COLOR);
+	@SuppressWarnings("unused")
 	private static final Font BILINGUAL_LABEL_FONT = ITALIC_FONT;
 
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
@@ -106,6 +107,7 @@ public class HoaDonPDFController {
 	@SuppressWarnings("unused")
 	private static final BaseColor LIGHT_GRAY = BaseColor.LIGHT_GRAY;
 
+	@SuppressWarnings("unused")
 	public static void xuatHoaDonPDF(DatVe datVe, String filePath) throws Exception {
 		Document document = new Document(PageSize.A4, 50, 50, 50, 50);
 		PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filePath));
@@ -401,6 +403,7 @@ public class HoaDonPDFController {
 		);
 	}
 
+	@SuppressWarnings("unused")
 	private static void themQRCodeVaThongTinLuotDi(Document document, DatVe datVe, PdfWriter writer) throws DocumentException {
 		Paragraph header = new Paragraph("THÔNG TIN LƯỢT ĐI", HEADER_FONT);
 		header.setSpacingBefore(10);
@@ -500,6 +503,7 @@ public class HoaDonPDFController {
 		themDuongKe(document);
 	}
 
+	@SuppressWarnings("unused")
 	private static void themTieuDe(Document document) throws DocumentException {
 		Paragraph title = new Paragraph("HÓA ĐƠN VÉ MÁY BAY", TITLE_FONT);
 		title.setAlignment(Element.ALIGN_CENTER);
@@ -748,6 +752,7 @@ public class HoaDonPDFController {
 	    System.out.println("Thời Gian Bay đã format: " + thoiGianBayStr);
 	}
 
+	@SuppressWarnings("unused")
 	private static void themThongTinHanhKhach(Document document, DatVe datVe) throws DocumentException {
 	    Paragraph header = new Paragraph("THÔNG TIN HÀNH KHÁCH", HEADER_FONT);
 	    header.setSpacingBefore(10);
@@ -817,6 +822,7 @@ public class HoaDonPDFController {
 		themDuongKe(document);
 	}
 
+	@SuppressWarnings("unused")
 	private static void themThongTinThanhToan(Document document, DatVe datVe) throws DocumentException {
 		Paragraph header = new Paragraph("THÔNG TIN THANH TOÁN", HEADER_FONT);
 		header.setSpacingBefore(10);

@@ -51,7 +51,10 @@ public class HangHangKhongController {
             if (!validateInput(maHang, tenHang, diaChi, soDienThoai, email)) {
                 return false;
             }
-
+    
+            HangHangKhong hang = new HangHangKhong(maHang, tenHang, diaChi, soDienThoai, email);
+    
+            // Kiểm tra mã hãng trùng
             if (service.findHangHangKhongByCode(maHang) != null) {
                 JOptionPane.showMessageDialog(view,
                         "Mã hãng đã tồn tại",
@@ -59,22 +62,42 @@ public class HangHangKhongController {
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-
-            HangHangKhong hang = new HangHangKhong(maHang, tenHang, diaChi, soDienThoai, email);
+    
+            // Kiểm tra thông tin trùng lặp
+            if (service.isHangInfoDuplicated(hang, null)) {
+                String duplicateInfo = service.getDuplicateInfo(hang, null);
+                JOptionPane.showMessageDialog(view,
+                        "Thông tin trùng lặp:\n" + duplicateInfo,
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+    
             return service.addHangHangKhong(hang);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-
+    
     public boolean updateHangHangKhong(String maHang, String tenHang, String diaChi, String soDienThoai, String email) {
         try {
             if (!validateInput(maHang, tenHang, diaChi, soDienThoai, email)) {
                 return false;
             }
-
+    
             HangHangKhong hang = new HangHangKhong(maHang, tenHang, diaChi, soDienThoai, email);
+    
+            // Kiểm tra thông tin trùng lặp, loại trừ chính mã hãng đang cập nhật
+            if (service.isHangInfoDuplicated(hang, maHang)) {
+                String duplicateInfo = service.getDuplicateInfo(hang, maHang);
+                JOptionPane.showMessageDialog(view,
+                        "Thông tin trùng lặp:\n" + duplicateInfo,
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+    
             return service.updateHangHangKhong(hang);
         } catch (Exception e) {
             e.printStackTrace();

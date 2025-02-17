@@ -242,8 +242,8 @@ private void drawSidebarPattern(Graphics2D g2d) {
             {"Lịch Bay", "schedule", "LichBayPanel"},
             {"Sân Bay", "airport", "SanBayPanel"},
             {"Hãng Hàng Không", "airline", "HangHangKhongPanel"},
-            {"Nhân Viên", "staff", "NhanVienPanel"},
-            {"Máy Bay", "plane", "MayBayPanel"}           
+            {"Máy Bay", "plane", "MayBayPanel"},          
+            {"Nhân Viên", "staff", "NhanVienPanel"}
         };
         
         for (String[] item : menuItems) {

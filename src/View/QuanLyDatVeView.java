@@ -97,7 +97,9 @@ public class QuanLyDatVeView extends JPanel {
 	private int currentPage = 0;
 	private List<DatVe> allBookings = new ArrayList<>();
 	
-	
+	private static final double PHI_CHO_NGOI_UU_TIEN = 200000; // 200.000 VND
+	private static final double PHI_HANH_LY_DAC_BIET = 300000; // 300.000 VND
+	private static final double PHI_SUAT_AN_DAC_BIET = 150000; // 150.000 VND
 
 	public QuanLyDatVeView(TrangChuPanel trangChuPanel) {
 		service = new DatVeService();
@@ -121,6 +123,54 @@ public class QuanLyDatVeView extends JPanel {
 			showMessage("Lỗi tải dữ liệu ban đầu: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
 		}
 	}
+
+	private void updateSpecialRequestsByTicketClass(String hangVe) {
+		switch (hangVe) {
+			case "Phổ thông":
+				// Suất ăn đặc biệt không khả dụng cho hạng phổ thông
+				chkSuatAnDacBiet.setEnabled(true);
+				chkSuatAnDacBiet.setSelected(false);
+				chkSuatAnDacBiet.setToolTipText("Không có sẵn cho hạng phổ thông");
+				
+				// Hỗ trợ y tế miễn phí
+				chkHoTroYTe.setEnabled(true);
+				chkHoTroYTe.setSelected(false);
+				chkHoTroYTe.setToolTipText("Miễn phí cho tất cả hạng vé");
+				
+				// Các dịch vụ có phí
+				chkChoNgoiUuTien.setEnabled(true);
+				chkChoNgoiUuTien.setSelected(false);
+				chkChoNgoiUuTien.setToolTipText("Phí thêm: " + String.format("%,.0f VND", PHI_CHO_NGOI_UU_TIEN));
+				
+				chkHanhLyDacBiet.setEnabled(true);
+				chkHanhLyDacBiet.setSelected(false);
+				chkHanhLyDacBiet.setToolTipText("Phí thêm: " + String.format("%,.0f VND", PHI_HANH_LY_DAC_BIET));
+				break;
+				
+			case "Thương gia":
+			case "Hạng nhất":
+				// Suất ăn đặc biệt miễn phí
+				chkSuatAnDacBiet.setEnabled(true);
+				chkSuatAnDacBiet.setSelected(false);
+				chkSuatAnDacBiet.setToolTipText("Miễn phí cho hạng " + hangVe);
+				
+				// Hỗ trợ y tế miễn phí
+				chkHoTroYTe.setEnabled(true);
+				chkHoTroYTe.setSelected(false);
+				chkHoTroYTe.setToolTipText("Miễn phí cho tất cả hạng vé");
+				
+				// Các dịch vụ có phí
+				chkChoNgoiUuTien.setEnabled(true);
+				chkChoNgoiUuTien.setSelected(false);
+				chkChoNgoiUuTien.setToolTipText("Phí thêm: " + String.format("%,.0f VND", PHI_CHO_NGOI_UU_TIEN));
+				
+				chkHanhLyDacBiet.setEnabled(true);
+				chkHanhLyDacBiet.setSelected(false);
+				chkHanhLyDacBiet.setToolTipText("Phí thêm: " + String.format("%,.0f VND", PHI_HANH_LY_DAC_BIET));
+				break;
+		}
+		updateTotalPrice(); // Cập nhật tổng giá khi thay đổi hạng vé
+	}	
 
 	private void initializeComponents() {
 		// Initialize Search Components
@@ -757,6 +807,17 @@ public class QuanLyDatVeView extends JPanel {
 	// Thay đổi cách xử lý trong setupListeners()
 	private void setupListeners() {
 		// Flight Selection Listener
+
+		cbHangVe.addActionListener(e -> {
+			String selectedClass = (String) cbHangVe.getSelectedItem();
+			updateSpecialRequestsByTicketClass(selectedClass);
+		});
+
+		 // Thêm listener cho các checkbox dịch vụ đặc biệt
+		 chkChoNgoiUuTien.addActionListener(e -> updateTotalPrice());
+		 chkHanhLyDacBiet.addActionListener(e -> updateTotalPrice());
+		 chkSuatAnDacBiet.addActionListener(e -> updateTotalPrice());
+
 		cbChuyenBay.addActionListener(e -> {
 			ChuyenBay selectedFlight = (ChuyenBay) cbChuyenBay.getSelectedItem();
 			if (selectedFlight != null) {
@@ -954,25 +1015,37 @@ public class QuanLyDatVeView extends JPanel {
 
 	private double calculateTotalPrice(double basePrice, int quantity) {
 		double total = basePrice * quantity;
-
-		// Apply class multiplier
+	
+		// Áp dụng hệ số theo hạng vé
 		String selectedClass = cbHangVe.getSelectedItem().toString();
 		switch (selectedClass) {
-		case "Thương gia":
-			total *= 1.5;
-			break;
-		case "Hạng nhất":
-			total *= 2.0;
-			break;
+			case "Thương gia":
+				total *= 1.5;
+				break;
+			case "Hạng nhất":
+				total *= 2.0;
+				break;
 		}
-
-		// Apply discount if available
+	
+		// Tính phí cho các dịch vụ đặc biệt
+		if (chkChoNgoiUuTien.isSelected()) {
+			total += PHI_CHO_NGOI_UU_TIEN * quantity;
+		}
+		
+		if (chkHanhLyDacBiet.isSelected()) {
+			total += PHI_HANH_LY_DAC_BIET * quantity;
+		}
+		
+		// Chỉ tính phí suất ăn đặc biệt cho hạng phổ thông (nếu được chọn)
+		if (chkSuatAnDacBiet.isSelected() && selectedClass.equals("Phổ thông")) {
+			total += PHI_SUAT_AN_DAC_BIET * quantity;
+		}
+	
+		// Áp dụng giảm giá nếu có
 		if (!txtMaGiamGia.getText().trim().isEmpty()) {
-			// Here you would typically validate the discount code
-			// For now, we'll apply a simple 10% discount
-			total *= 0.9;
+			total *= 0.9; // Giảm 10%
 		}
-
+	
 		return total;
 	}
 
