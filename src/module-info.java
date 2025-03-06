@@ -1,12 +1,16 @@
-module QuanLyHangKhong {
-    requires java.desktop;
-    requires java.sql;
-	requires jfreechart;
-	requires java.xml;
-	requires itextpdf;
-    
-    exports View;
-    exports Controller;
-    exports Model;
-    exports Database;
+/**
+ * 
+ */
+/**
+ * 
+ */
+module Quizapp {
+    requires java.base; // Mặc định có thể bỏ qua
+    requires java.sql; // Nếu bạn sử dụng MySQL Connector
+    requires java.desktop; // Nếu bạn sử dụng Swing, AWT
+    requires itextpdf; // Nếu dùng itextpdf
+    requires jcalendar; // Nếu dùng jcalendar
+
+    // Nếu có package nào bạn muốn mở ra cho module khác, thêm như sau:
+    // exports com.yourpackage;
 }

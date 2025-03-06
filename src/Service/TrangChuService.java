@@ -43,7 +43,7 @@ public class TrangChuService {
     public double getTodayRevenue() {
         double todayRevenue = 0;
         LocalDate today = LocalDate.now();
-        // Sửa lại câu query để lấy dữ liệu từ cả DatVe và VeMayBay
+        //lấy dữ liệu từ cả DatVe và VeMayBay
         String query = "SELECT COALESCE(SUM(TongGia), 0) FROM DatVe WHERE DATE(NgayDat) = CURRENT_DATE " + 
                       "AND TrangThai = 'Đã thanh toán' " +
                       "UNION ALL " +

@@ -14,12 +14,12 @@ import Components.PieChart;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import javax.swing.Timer;
 
+@SuppressWarnings("serial")
 public class TrangChuPanel extends JPanel {
     // Enhanced color scheme
     private final Color PRIMARY_DARK = new Color(15, 23, 42);      // Slate 900
@@ -70,26 +70,26 @@ public class TrangChuPanel extends JPanel {
         this.userAccountService = new UserAccountService();
         
         initializeUI();
-        loadBackgroundImage();
+//        loadBackgroundImage();
         startClock();
         startDataRefreshTimer();
         setupAnimations();
     }
 
-    private void loadBackgroundImage() {
-        try {
-            URL imageUrl = getClass().getResource("/src/image/airplane1.jpg");
-            if (imageUrl != null) {
-                backgroundImage = new ImageIcon(imageUrl).getImage();
-            } else {
-                System.err.println("Không tìm thấy ảnh nền");
-                backgroundImage = null;
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi load ảnh nền: " + e.getMessage());
-            backgroundImage = null;
-        }
-    }
+//    private void loadBackgroundImage() {
+//        try {
+//            URL imageUrl = getClass().getResource("/src/image/airplane1.jpg");
+//            if (imageUrl != null) {
+//                backgroundImage = new ImageIcon(imageUrl).getImage();
+//            } else {
+//                System.err.println("Không tìm thấy ảnh nền");
+//                backgroundImage = null;
+//            }
+//        } catch (Exception e) {
+//            System.err.println("Lỗi load ảnh nền: " + e.getMessage());
+//            backgroundImage = null;
+//        }
+//    }
 
     private void setupAnimations() {
         Timer animationTimer = new Timer(16, e -> repaint());
